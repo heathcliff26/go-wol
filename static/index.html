@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wake on Lan</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/w3.css">
+    <link rel="stylesheet" href="/css/w3-theme-black.css">
+    <script type="text/javascript" src="/js/wake.js"></script>
+</head>
+
+<body class="w3-blue-grey">
+
+    <div class="w3-row-padding w3-center w3-margin-top">
+        <div class="w3-third">
+            <div class="w3-container"></div>
+        </div>
+        <div class="w3-third">
+            <div class="w3-card w3-container w3-light-grey" style="min-height:460px">
+                <h2>Your Devices</h2>
+                <ul class="w3-ul w3-border w3-hoverable w3-margin-top w3-white">
+                    {{range .}}
+                    <li class="w3-hover-light-green">
+                        <div class="w3-container w3-center">
+                            <div class="w3-half">
+                                <h3>{{.Name}}</h3>
+                            </div>
+                            <div class="w3-half">
+                                <p>{{.MAC}}</p>
+                            </div>
+                        </div>
+                        <div class="w3-container"><a class="w3-button w3-theme" onclick="wake('{{.MAC}}');">Wake</a></div>
+                    </li>
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+        <div class="w3-third">
+            <div class="w3-container"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
