@@ -18,6 +18,7 @@ It can be used directly via the cli, or remotely via a web interface.
     - [Using the image](#using-the-image)
     - [Image location](#image-location)
     - [Tags](#tags)
+  - [Examples](#examples)
   - [Credit](#credit)
 
 ## Usage
@@ -67,6 +68,10 @@ There are different flavors of the image:
 | **latest**  | Last released version of the image                          |
 | **rolling** | Rolling update of the image, always build from main branch. |
 | **vX.Y.Z**  | Released version of the image                               |
+
+## Examples
+
+An example configuration for the server can be found [here](examples/config.yaml)
 
 ## Credit
 

@@ -1,0 +1,19 @@
+---
+# The level of loggin output.
+# Accepted options are:
+#   - debug
+#   - info
+#   - warn
+#   - error
+logLevel: info
+
+# The port where the server will listen on
+port: 8080
+
+# The list of hosts
+hosts:
+  - name: michael
+    mac: 12:34:56:78:9a:bc
+  - name: myers
+    mac: de:f0:ff:ff:ff:ff
+
