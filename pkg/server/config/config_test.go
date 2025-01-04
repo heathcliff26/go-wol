@@ -84,6 +84,11 @@ func TestInvalidConfig(t *testing.T) {
 			Path:  "testdata/invalid-config-ssl-2.yaml",
 			Error: "config.ErrIncompleteSSLConfig",
 		},
+		{
+			Name:  "HostWithEmptyMAC",
+			Path:  "testdata/invalid-config-mac.yaml",
+			Error: "config.ErrMissingMAC",
+		},
 	}
 
 	for _, tCase := range tMatrix {

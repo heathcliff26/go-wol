@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -94,7 +93,7 @@ func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) 
 
 	for _, host := range c.Hosts {
 		if host.MAC == "" {
-			return Config{}, fmt.Errorf("host \"%s\" with empty mac address", host.Name)
+			return Config{}, ErrMissingMAC{}
 		}
 	}
 
