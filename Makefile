@@ -11,7 +11,7 @@ image:
 	podman build -t $(REPOSITORY)/$(CONTAINER_NAME):$(TAG) .
 
 test:
-	go test -v -race -coverprofile=coverprofile.out ./...
+	go test -v -race -coverprofile=coverprofile.out -coverpkg "./..." ./...
 
 update-deps:
 	hack/update-deps.sh

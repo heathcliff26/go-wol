@@ -18,10 +18,6 @@ func NewCommand() *cobra.Command {
 		Short: "Send a magic packet to the given mac address",
 		Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 1 {
-				exitError(cmd, fmt.Errorf("unknown number of args, expected 1, got %d: %v", len(args), args))
-			}
-
 			bcAddr, err := cmd.Flags().GetString(flagNameBroadcastAddress)
 			if err != nil {
 				exitError(cmd, err)
