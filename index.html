@@ -55,15 +55,15 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/heathcliff26/go-wol/cmd/cmd.go (71.4%)</option>
+				<option value="file0">github.com/heathcliff26/go-wol/cmd/cmd.go (85.7%)</option>
 				
-				<option value="file1">github.com/heathcliff26/go-wol/cmd/main.go (0.0%)</option>
+				<option value="file1">github.com/heathcliff26/go-wol/cmd/main.go (75.0%)</option>
 				
-				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/api.go (0.0%)</option>
+				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/api.go (72.0%)</option>
 				
 				<option value="file3">github.com/heathcliff26/go-wol/pkg/server/cmd.go (20.0%)</option>
 				
-				<option value="file4">github.com/heathcliff26/go-wol/pkg/server/config/config.go (95.6%)</option>
+				<option value="file4">github.com/heathcliff26/go-wol/pkg/server/config/config.go (100.0%)</option>
 				
 				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/config/errors.go (0.0%)</option>
 				
@@ -71,9 +71,9 @@
 				
 				<option value="file7">github.com/heathcliff26/go-wol/pkg/version/version.go (73.7%)</option>
 				
-				<option value="file8">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (17.6%)</option>
+				<option value="file8">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/wol.go (0.0%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
 				
 				</select>
 			</div>
@@ -105,22 +105,22 @@ import (
         "github.com/spf13/cobra"
 )
 
-func NewRootCommand() *cobra.Command <span class="cov8" title="1">{
+func NewRootCommand() *cobra.Command <span class="cov10" title="2">{
         cobra.AddTemplateFunc(
                 "ProgramName", func() string </span><span class="cov0" title="0">{
                         return version.Name
                 }</span>,
         )
 
-        <span class="cov8" title="1">rootCmd := &amp;cobra.Command{
+        <span class="cov10" title="2">rootCmd := &amp;cobra.Command{
                 Use:   version.Name,
                 Short: version.Name + " power on other devices on the network via Wake-on-Lan",
-                RunE: func(cmd *cobra.Command, _ []string) error </span><span class="cov0" title="0">{
+                RunE: func(cmd *cobra.Command, _ []string) error </span><span class="cov1" title="1">{
                         return cmd.Help()
                 }</span>,
         }
 
-        <span class="cov8" title="1">wolCMD := wol.NewCommand()
+        <span class="cov10" title="2">wolCMD := wol.NewCommand()
 
         rootCmd.AddCommand(
                 wolCMD,
@@ -136,7 +136,7 @@ func NewRootCommand() *cobra.Command <span class="cov8" title="1">{
 
 import "os"
 
-func main() <span class="cov0" title="0">{
+func main() <span class="cov8" title="1">{
         cmd := NewRootCommand()
         err := cmd.Execute()
         if err != nil </span><span class="cov0" title="0">{
@@ -160,18 +160,18 @@ type Response struct {
         Reason string `json:"reason"`
 }
 
-func Api(res http.ResponseWriter, req *http.Request) <span class="cov0" title="0">{
+func Api(res http.ResponseWriter, req *http.Request) <span class="cov10" title="2">{
         macAddr := req.PathValue("macAddr")
 
         packet, err := wol.CreatePacket(macAddr)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 slog.Info("Failed to create magic packet from MAC address", slog.String("mac", macAddr), slog.Any("error", err))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Failed to create magic packet from MAC address")
                 return
         }</span>
 
-        <span class="cov0" title="0">err = packet.Send("")
+        <span class="cov1" title="1">err = packet.Send("")
         if err != nil </span><span class="cov0" title="0">{
                 slog.Info("Failed to send magic packet", slog.String("mac", macAddr), slog.Any("error", err))
                 res.WriteHeader(http.StatusBadRequest)
@@ -179,26 +179,26 @@ func Api(res http.ResponseWriter, req *http.Request) <span class="cov0" title="0
                 return
         }</span>
 
-        <span class="cov0" title="0">slog.Info("Send magic packet", slog.String("mac", macAddr))
+        <span class="cov1" title="1">slog.Info("Send magic packet", slog.String("mac", macAddr))
         sendResponse(res, "")</span>
 }
 
-func sendResponse(rw http.ResponseWriter, reason string) <span class="cov0" title="0">{
+func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="2">{
         response := Response{
                 Status: "error",
                 Reason: reason,
         }
-        if reason == "" </span><span class="cov0" title="0">{
+        if reason == "" </span><span class="cov1" title="1">{
                 response.Status = "ok"
         }</span>
 
-        <span class="cov0" title="0">b, err := json.MarshalIndent(response, "", "  ")
+        <span class="cov10" title="2">b, err := json.MarshalIndent(response, "", "  ")
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to create Response", "err", err)
                 return
         }</span>
 
-        <span class="cov0" title="0">_, err = rw.Write(b)
+        <span class="cov10" title="2">_, err = rw.Write(b)
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to send response to client", "err", err)
         }</span>
@@ -221,7 +221,7 @@ const (
         flagNameEnv      = "env"
 )
 
-func NewCommand() *cobra.Command <span class="cov8" title="1">{
+func NewCommand() *cobra.Command <span class="cov10" title="2">{
         cmd := &amp;cobra.Command{
                 Use:   "server",
                 Short: "Serve a frontend via gui",
@@ -233,7 +233,7 @@ func NewCommand() *cobra.Command <span class="cov8" title="1">{
                         }</span>
                 },
         }
-        <span class="cov8" title="1">cmd.Flags().StringP(flagNameConfig, "c", "", "Config file to use")
+        <span class="cov10" title="2">cmd.Flags().StringP(flagNameConfig, "c", "", "Config file to use")
         cmd.Flags().String(flagNameLogLevel, "", "Override the log level given in the config file")
         cmd.Flags().Bool(flagNameEnv, false, "Expand enviroment variables in the config file")
 
@@ -271,7 +271,6 @@ func run(cmd *cobra.Command) error <span class="cov0" title="0">{
 		<pre class="file" id="file4" style="display: none">package config
 
 import (
-        "fmt"
         "log/slog"
         "os"
         "strings"
@@ -290,7 +289,7 @@ const (
 var logLevel *slog.LevelVar
 
 // Initialize the logger
-func init() <span class="cov1" title="1">{
+func init() <span class="cov4" title="3">{
         logLevel = &amp;slog.LevelVar{}
         opts := slog.HandlerOptions{
                 Level: logLevel,
@@ -318,7 +317,7 @@ type Host struct {
 }
 
 // Returns a Config with default values set
-func DefaultConfig() Config <span class="cov8" title="13">{
+func DefaultConfig() Config <span class="cov8" title="14">{
         return Config{
                 LogLevel: DEFAULT_LOG_LEVEL,
                 Port:     DEFAULT_SERVER_PORT,
@@ -326,8 +325,8 @@ func DefaultConfig() Config <span class="cov8" title="13">{
 }</span>
 
 // Return the path to the cobfig file
-func getPath(path string) string <span class="cov9" title="15">{
-        if path != "" </span><span class="cov8" title="12">{
+func getPath(path string) string <span class="cov9" title="16">{
+        if path != "" </span><span class="cov8" title="13">{
                 return path
         }</span>
         <span class="cov4" title="3">if _, ok := os.LookupEnv("container"); ok </span><span class="cov1" title="1">{
@@ -343,35 +342,35 @@ func getPath(path string) string <span class="cov9" title="15">{
 //                path: Path to config file, if empty will use either DEFAULT_CONFIG_PATH or DEFAULT_CONFIG_PATH_CONTAINER
 //                env: Determines if enviroment variables in the file will be expanded before decoding
 //         logLevelOverride: Override the log level given by the config
-func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="12">{
+func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="13">{
         c, err := loadConfigFile(path, env)
         if err != nil </span><span class="cov4" title="3">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="9">if logLevelOverride == "" </span><span class="cov7" title="8">{
+        <span class="cov7" title="10">if logLevelOverride == "" </span><span class="cov7" title="9">{
                 err = setLogLevel(c.LogLevel)
         }</span> else<span class="cov1" title="1"> {
                 err = setLogLevel(logLevelOverride)
         }</span>
-        <span class="cov7" title="9">if err != nil </span><span class="cov1" title="1">{
+        <span class="cov7" title="10">if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="8">if c.SSL.Enabled &amp;&amp; (c.SSL.Cert == "" || c.SSL.Key == "") </span><span class="cov3" title="2">{
+        <span class="cov7" title="9">if c.SSL.Enabled &amp;&amp; (c.SSL.Cert == "" || c.SSL.Key == "") </span><span class="cov3" title="2">{
                 return Config{}, ErrIncompleteSSLConfig{}
         }</span>
 
-        <span class="cov6" title="6">for _, host := range c.Hosts </span><span class="cov0" title="0">{
-                if host.MAC == "" </span><span class="cov0" title="0">{
-                        return Config{}, fmt.Errorf("host \"%s\" with empty mac address", host.Name)
+        <span class="cov6" title="7">for _, host := range c.Hosts </span><span class="cov1" title="1">{
+                if host.MAC == "" </span><span class="cov1" title="1">{
+                        return Config{}, ErrMissingMAC{}
                 }</span>
         }
 
         <span class="cov6" title="6">return c, nil</span>
 }
 
-func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="12">{
+func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="13">{
         c := DefaultConfig()
 
         p := getPath(path)
@@ -380,26 +379,26 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" ti
         if path == "" &amp;&amp; os.IsNotExist(err) </span><span class="cov1" title="1">{
                 slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
                 return c, nil
-        }</span> else<span class="cov8" title="11"> if err != nil </span><span class="cov1" title="1">{
+        }</span> else<span class="cov8" title="12"> if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov8" title="10">if env </span><span class="cov1" title="1">{
+        <span class="cov8" title="11">if env </span><span class="cov1" title="1">{
                 f = []byte(os.ExpandEnv(string(f)))
         }</span>
 
-        <span class="cov8" title="10">err = yaml.Unmarshal(f, &amp;c)
+        <span class="cov8" title="11">err = yaml.Unmarshal(f, &amp;c)
         if err != nil </span><span class="cov3" title="2">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="8">return c, nil</span>
+        <span class="cov7" title="9">return c, nil</span>
 }
 
 // Parse a given string and set the resulting log level
-func setLogLevel(level string) error <span class="cov10" title="19">{
+func setLogLevel(level string) error <span class="cov10" title="20">{
         switch strings.ToLower(level) </span>{
-        case "debug":<span class="cov5" title="5">
+        case "debug":<span class="cov6" title="6">
                 logLevel.Set(slog.LevelDebug)</span>
         case "info":<span class="cov6" title="6">
                 logLevel.Set(slog.LevelInfo)</span>
@@ -410,7 +409,7 @@ func setLogLevel(level string) error <span class="cov10" title="19">{
         default:<span class="cov3" title="2">
                 return &amp;ErrUnknownLogLevel{level}</span>
         }
-        <span class="cov9" title="17">return nil</span>
+        <span class="cov9" title="18">return nil</span>
 }
 </pre>
 		
@@ -428,6 +427,12 @@ type ErrIncompleteSSLConfig struct{}
 
 func (e ErrIncompleteSSLConfig) Error() string <span class="cov0" title="0">{
         return "SSL is enabled but certificate and/or private key are missing"
+}</span>
+
+type ErrMissingMAC struct{}
+
+func (e ErrMissingMAC) Error() string <span class="cov0" title="0">{
+        return "At least one host has a missing mac address."
 }</span>
 </pre>
 		
@@ -548,7 +553,7 @@ const Name = "go-wol"
 
 var version = "devel"
 
-func NewCommand() *cobra.Command <span class="cov8" title="1">{
+func NewCommand() *cobra.Command <span class="cov10" title="3">{
         cmd := &amp;cobra.Command{
                 Use:   "version",
                 Short: "Print version information and exit",
@@ -557,12 +562,12 @@ func NewCommand() *cobra.Command <span class="cov8" title="1">{
                 }</span>,
         }
         // Override to prevent parent function from running
-        <span class="cov8" title="1">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
+        <span class="cov10" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
 
-        <span class="cov8" title="1">return cmd</span>
+        <span class="cov10" title="3">return cmd</span>
 }
 
-func Version() string <span class="cov8" title="1">{
+func Version() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
         for _, item := range buildinfo.Settings </span><span class="cov0" title="0">{
@@ -571,13 +576,13 @@ func Version() string <span class="cov8" title="1">{
                         break</span>
                 }
         }
-        <span class="cov8" title="1">if len(commit) &gt; 7 </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">if len(commit) &gt; 7 </span><span class="cov0" title="0">{
                 commit = commit[:7]
-        }</span> else<span class="cov8" title="1"> if commit == "" </span><span class="cov8" title="1">{
+        }</span> else<span class="cov1" title="1"> if commit == "" </span><span class="cov1" title="1">{
                 commit = "Unknown"
         }</span>
 
-        <span class="cov8" title="1">result := Name + ":\n"
+        <span class="cov1" title="1">result := Name + ":\n"
         result += "    Version: " + version + "\n"
         result += "    Commit:  " + commit + "\n"
         result += "    Go:      " + runtime.Version() + "\n"
@@ -600,44 +605,40 @@ const (
 )
 
 // Create new Wake-on-Lan command
-func NewCommand() *cobra.Command <span class="cov8" title="1">{
+func NewCommand() *cobra.Command <span class="cov10" title="8">{
         cmd := &amp;cobra.Command{
                 Use:   "wol",
                 Short: "Send a magic packet to the given mac address",
                 Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-                Run: func(cmd *cobra.Command, args []string) </span><span class="cov0" title="0">{
-                        if len(args) != 1 </span><span class="cov0" title="0">{
-                                exitError(cmd, fmt.Errorf("unknown number of args, expected 1, got %d: %v", len(args), args))
-                        }</span>
-
-                        <span class="cov0" title="0">bcAddr, err := cmd.Flags().GetString(flagNameBroadcastAddress)
+                Run: func(cmd *cobra.Command, args []string) </span><span class="cov7" title="5">{
+                        bcAddr, err := cmd.Flags().GetString(flagNameBroadcastAddress)
                         if err != nil </span><span class="cov0" title="0">{
                                 exitError(cmd, err)
                         }</span>
 
-                        <span class="cov0" title="0">err = run(args[0], bcAddr)
-                        if err != nil </span><span class="cov0" title="0">{
+                        <span class="cov7" title="5">err = run(args[0], bcAddr)
+                        if err != nil </span><span class="cov5" title="3">{
                                 exitError(cmd, err)
                         }</span>
                 },
         }
 
-        <span class="cov8" title="1">cmd.Flags().StringP(flagNameBroadcastAddress, "b", DEFAULT_BROADCAST_ADDRESS, "The broadcast ip address to use")
+        <span class="cov10" title="8">cmd.Flags().StringP(flagNameBroadcastAddress, "b", DEFAULT_BROADCAST_ADDRESS, "The broadcast ip address to use")
 
         return cmd</span>
 }
 
-func run(macAddress, bcAddr string) error <span class="cov0" title="0">{
+func run(macAddress, bcAddr string) error <span class="cov7" title="5">{
         packet, err := CreatePacket(macAddress)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov4" title="2">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">return packet.Send(bcAddr)</span>
+        <span class="cov5" title="3">return packet.Send(bcAddr)</span>
 }
 
 // Print the error information on stderr and exit with code 1
-func exitError(cmd *cobra.Command, err error) <span class="cov0" title="0">{
+func exitError(cmd *cobra.Command, err error) <span class="cov5" title="3">{
         fmt.Fprintln(cmd.Root().ErrOrStderr(), "Fatal: "+err.Error())
         os.Exit(1)
 }</span>
@@ -663,54 +664,54 @@ type MagicPacket struct {
 }
 
 // Create a new magic packet from the given mac address
-func CreatePacket(macAddrStr string) (*MagicPacket, error) <span class="cov0" title="0">{
+func CreatePacket(macAddrStr string) (*MagicPacket, error) <span class="cov5" title="7">{
         hwAddr, err := net.ParseMAC(macAddrStr)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov3" title="3">{
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">packet := &amp;MagicPacket{}
+        <span class="cov4" title="4">packet := &amp;MagicPacket{}
 
-        for i := range packet.header </span><span class="cov0" title="0">{
+        for i := range packet.header </span><span class="cov7" title="24">{
                 packet.header[i] = 0xFF
         }</span>
 
-        <span class="cov0" title="0">var macAddr MACAddress
+        <span class="cov4" title="4">var macAddr MACAddress
 
-        for i := range macAddr </span><span class="cov0" title="0">{
+        for i := range macAddr </span><span class="cov7" title="24">{
                 macAddr[i] = hwAddr[i]
         }</span>
 
-        <span class="cov0" title="0">for i := range packet.payload </span><span class="cov0" title="0">{
+        <span class="cov4" title="4">for i := range packet.payload </span><span class="cov10" title="64">{
                 packet.payload[i] = macAddr
         }</span>
 
-        <span class="cov0" title="0">return packet, nil</span>
+        <span class="cov4" title="4">return packet, nil</span>
 }
 
 // Send the magic packet to the given broadcast address
-func (p *MagicPacket) Send(bcAddr string) error <span class="cov0" title="0">{
-        if bcAddr == "" </span><span class="cov0" title="0">{
+func (p *MagicPacket) Send(bcAddr string) error <span class="cov4" title="4">{
+        if bcAddr == "" </span><span class="cov1" title="1">{
                 bcAddr = DEFAULT_BROADCAST_ADDRESS
         }</span>
 
-        <span class="cov0" title="0">buf, err := binary.Append(nil, binary.BigEndian, p)
+        <span class="cov4" title="4">buf, err := binary.Append(nil, binary.BigEndian, p)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">conn, err := net.Dial("udp", bcAddr+":9")
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov4" title="4">conn, err := net.Dial("udp", bcAddr+":9")
+        if err != nil </span><span class="cov1" title="1">{
                 return err
         }</span>
-        <span class="cov0" title="0">defer conn.Close()
+        <span class="cov3" title="3">defer conn.Close()
 
         bytesWritten, err := conn.Write(buf)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">slog.Debug("Send packet", slog.String("broadcast", bcAddr), slog.Int("bytesWritten", bytesWritten))
+        <span class="cov3" title="3">slog.Debug("Send packet", slog.String("broadcast", bcAddr), slog.Int("bytesWritten", bytesWritten))
         return nil</span>
 }
 </pre>
