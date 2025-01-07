@@ -44,6 +44,7 @@ on:
       - "*.go"
       - "**/*.go"
       - "Dockerfile"
+      - "static/*"
   pull_request:
     branches: ["main"]
   merge_group:
