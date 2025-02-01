@@ -3,7 +3,7 @@ module github.com/heathcliff26/go-wol
 go 1.23.0
 
 require (
-	github.com/heathcliff26/simple-fileserver v1.2.0
+	github.com/heathcliff26/simple-fileserver v1.2.1
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
