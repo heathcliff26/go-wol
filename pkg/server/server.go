@@ -14,7 +14,6 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/api"
 	"github.com/heathcliff26/go-wol/pkg/server/config"
 	"github.com/heathcliff26/go-wol/static"
-	"github.com/heathcliff26/simple-fileserver/pkg/filesystem"
 	"github.com/heathcliff26/simple-fileserver/pkg/middleware"
 )
 
@@ -67,16 +66,12 @@ func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) {
 
 // Starts the server and exits with error if that fails
 func (s *Server) Run() error {
-	cssFS := filesystem.NewIndexlessFilesystem(http.FS(static.CSS))
-	jsFS := filesystem.NewIndexlessFilesystem(http.FS(static.JS))
-
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.indexHandler)
 	router.HandleFunc("GET /index.html", s.indexHandler)
 	router.HandleFunc("GET /api/{macAddr}", api.Api)
-	// TODO: Add middleware to set Etag to binary version for browser caching
-	router.Handle("GET /css/", http.FileServer(cssFS))
-	router.Handle("GET /js/", http.FileServer(jsFS))
+	router.Handle("GET /css/", StaticFileServer(static.CSS))
+	router.Handle("GET /js/", StaticFileServer(static.JS))
 
 	server := http.Server{
 		Addr:    s.addr,
