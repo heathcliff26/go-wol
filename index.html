@@ -69,11 +69,13 @@
 				
 				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (0.0%)</option>
 				
-				<option value="file7">github.com/heathcliff26/go-wol/pkg/version/version.go (73.7%)</option>
+				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
-				<option value="file8">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				<option value="file8">github.com/heathcliff26/go-wol/pkg/version/version.go (75.0%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				
+				<option value="file10">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
 				
 				</select>
 			</div>
@@ -289,7 +291,7 @@ const (
 var logLevel *slog.LevelVar
 
 // Initialize the logger
-func init() <span class="cov4" title="3">{
+func init() <span class="cov5" title="4">{
         logLevel = &amp;slog.LevelVar{}
         opts := slog.HandlerOptions{
                 Level: logLevel,
@@ -452,7 +454,6 @@ import (
         "github.com/heathcliff26/go-wol/pkg/server/api"
         "github.com/heathcliff26/go-wol/pkg/server/config"
         "github.com/heathcliff26/go-wol/static"
-        "github.com/heathcliff26/simple-fileserver/pkg/filesystem"
         "github.com/heathcliff26/simple-fileserver/pkg/middleware"
 )
 
@@ -505,16 +506,12 @@ func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) <span 
 
 // Starts the server and exits with error if that fails
 func (s *Server) Run() error <span class="cov0" title="0">{
-        cssFS := filesystem.NewIndexlessFilesystem(http.FS(static.CSS))
-        jsFS := filesystem.NewIndexlessFilesystem(http.FS(static.JS))
-
         router := http.NewServeMux()
         router.HandleFunc("GET /{$}", s.indexHandler)
         router.HandleFunc("GET /index.html", s.indexHandler)
         router.HandleFunc("GET /api/{macAddr}", api.Api)
-        // TODO: Add middleware to set Etag to binary version for browser caching
-        router.Handle("GET /css/", http.FileServer(cssFS))
-        router.Handle("GET /js/", http.FileServer(jsFS))
+        router.Handle("GET /css/", StaticFileServer(static.CSS))
+        router.Handle("GET /js/", StaticFileServer(static.JS))
 
         server := http.Server{
                 Addr:    s.addr,
@@ -539,10 +536,40 @@ func (s *Server) Run() error <span class="cov0" title="0">{
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package version
+		<pre class="file" id="file7" style="display: none">package server
 
 import (
-        "fmt"
+        "embed"
+        "net/http"
+        "strings"
+
+        "github.com/heathcliff26/go-wol/pkg/version"
+        "github.com/heathcliff26/simple-fileserver/pkg/filesystem"
+)
+
+func StaticFileServer(root embed.FS) http.Handler <span class="cov10" title="3">{
+        indexlessFS := filesystem.NewIndexlessFilesystem(http.FS(root))
+        fs := http.FileServer(indexlessFS)
+
+        return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) </span><span class="cov10" title="3">{
+                res.Header().Set("ETag", version.Version())
+                res.Header().Set("Cache-Control", "public, max-age=3600")
+
+                if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov6" title="2">{
+                        if strings.Contains(match, version.Version()) </span><span class="cov1" title="1">{
+                                res.WriteHeader(http.StatusNotModified)
+                                return
+                        }</span>
+                }
+
+                <span class="cov6" title="2">fs.ServeHTTP(res, req)</span>
+        })
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package version
+
+import (
         "runtime"
         "runtime/debug"
 
@@ -553,21 +580,28 @@ const Name = "go-wol"
 
 var version = "devel"
 
-func NewCommand() *cobra.Command <span class="cov10" title="3">{
+// Create a new version command with the given app name
+func NewCommand() *cobra.Command <span class="cov5" title="3">{
         cmd := &amp;cobra.Command{
                 Use:   "version",
                 Short: "Print version information and exit",
                 Run: func(cmd *cobra.Command, args []string) </span><span class="cov0" title="0">{
-                        fmt.Print(Version())
+                        cmd.Print(VersionInfoString())
                 }</span>,
         }
         // Override to prevent parent function from running
-        <span class="cov10" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
+        <span class="cov5" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
 
-        <span class="cov10" title="3">return cmd</span>
+        <span class="cov5" title="3">return cmd</span>
 }
 
-func Version() string <span class="cov1" title="1">{
+// Return the version string
+func Version() string <span class="cov10" title="10">{
+        return version
+}</span>
+
+// Return a formated string containing the version, git commit and go version the app was compiled with.
+func VersionInfoString() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
         for _, item := range buildinfo.Settings </span><span class="cov0" title="0">{
@@ -591,7 +625,7 @@ func Version() string <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package wol
+		<pre class="file" id="file9" style="display: none">package wol
 
 import (
         "fmt"
@@ -644,7 +678,7 @@ func exitError(cmd *cobra.Command, err error) <span class="cov5" title="3">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package wol
+		<pre class="file" id="file10" style="display: none">package wol
 
 import (
         "encoding/binary"
