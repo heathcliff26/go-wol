@@ -67,7 +67,7 @@
 				
 				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/config/errors.go (0.0%)</option>
 				
-				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (0.0%)</option>
+				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (86.1%)</option>
 				
 				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
@@ -162,11 +162,11 @@ type Response struct {
         Reason string `json:"reason"`
 }
 
-func Api(res http.ResponseWriter, req *http.Request) <span class="cov10" title="2">{
+func Api(res http.ResponseWriter, req *http.Request) <span class="cov10" title="3">{
         macAddr := req.PathValue("macAddr")
 
         packet, err := wol.CreatePacket(macAddr)
-        if err != nil </span><span class="cov1" title="1">{
+        if err != nil </span><span class="cov6" title="2">{
                 slog.Info("Failed to create magic packet from MAC address", slog.String("mac", macAddr), slog.Any("error", err))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Failed to create magic packet from MAC address")
@@ -185,7 +185,7 @@ func Api(res http.ResponseWriter, req *http.Request) <span class="cov10" title="
         sendResponse(res, "")</span>
 }
 
-func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="2">{
+func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="3">{
         response := Response{
                 Status: "error",
                 Reason: reason,
@@ -194,13 +194,13 @@ func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" tit
                 response.Status = "ok"
         }</span>
 
-        <span class="cov10" title="2">b, err := json.MarshalIndent(response, "", "  ")
+        <span class="cov10" title="3">b, err := json.MarshalIndent(response, "", "  ")
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to create Response", "err", err)
                 return
         }</span>
 
-        <span class="cov10" title="2">_, err = rw.Write(b)
+        <span class="cov10" title="3">_, err = rw.Write(b)
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to send response to client", "err", err)
         }</span>
@@ -464,18 +464,18 @@ type Server struct {
         indexChecksum string
 }
 
-func NewServer(c config.Config) (*Server, error) <span class="cov0" title="0">{
+func NewServer(c config.Config) (*Server, error) <span class="cov10" title="3">{
         tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">var buf bytes.Buffer
+        <span class="cov10" title="3">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, c.Hosts)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
-        <span class="cov0" title="0">indexHTML := buf.String()
+        <span class="cov10" title="3">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
@@ -487,25 +487,25 @@ func NewServer(c config.Config) (*Server, error) <span class="cov0" title="0">{
         }, nil</span>
 }
 
-func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) <span class="cov0" title="0">{
+func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) <span class="cov10" title="3">{
         res.Header().Set("ETag", s.indexChecksum)
         res.Header().Set("Cache-Control", "public, max-age=300")
 
-        if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov0" title="0">{
-                if strings.Contains(match, s.indexChecksum) </span><span class="cov0" title="0">{
+        if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov1" title="1">{
+                if strings.Contains(match, s.indexChecksum) </span><span class="cov1" title="1">{
                         res.WriteHeader(http.StatusNotModified)
                         return
                 }</span>
         }
 
-        <span class="cov0" title="0">count, err := res.Write([]byte(s.indexHTML))
+        <span class="cov6" title="2">count, err := res.Write([]byte(s.indexHTML))
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to write index.html to client", "err", err, slog.Int("written", count))
         }</span>
 }
 
 // Starts the server and exits with error if that fails
-func (s *Server) Run() error <span class="cov0" title="0">{
+func (s *Server) Run() error <span class="cov6" title="2">{
         router := http.NewServeMux()
         router.HandleFunc("GET /{$}", s.indexHandler)
         router.HandleFunc("GET /index.html", s.indexHandler)
@@ -519,20 +519,20 @@ func (s *Server) Run() error <span class="cov0" title="0">{
         }
 
         var err error
-        if s.ssl.Enabled </span><span class="cov0" title="0">{
+        if s.ssl.Enabled </span><span class="cov1" title="1">{
                 slog.Info("Starting server", slog.String("addr", s.addr), slog.String("sslKey", s.ssl.Key), slog.String("sslCert", s.ssl.Cert))
                 err = server.ListenAndServeTLS(s.ssl.Cert, s.ssl.Key)
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov1" title="1"> {
                 slog.Info("Starting server", slog.String("addr", s.addr))
                 err = server.ListenAndServe()
         }</span>
 
         // This just means the server was closed after running
-        <span class="cov0" title="0">if errors.Is(err, http.ErrServerClosed) </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">if errors.Is(err, http.ErrServerClosed) </span><span class="cov0" title="0">{
                 slog.Info("Server closed, exiting")
                 return nil
         }</span>
-        <span class="cov0" title="0">return err</span>
+        <span class="cov1" title="1">return err</span>
 }
 </pre>
 		
@@ -547,22 +547,22 @@ import (
         "github.com/heathcliff26/simple-fileserver/pkg/filesystem"
 )
 
-func StaticFileServer(root embed.FS) http.Handler <span class="cov10" title="3">{
+func StaticFileServer(root embed.FS) http.Handler <span class="cov10" title="7">{
         indexlessFS := filesystem.NewIndexlessFilesystem(http.FS(root))
         fs := http.FileServer(indexlessFS)
 
-        return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) </span><span class="cov10" title="3">{
+        return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) </span><span class="cov8" title="5">{
                 res.Header().Set("ETag", version.Version())
                 res.Header().Set("Cache-Control", "public, max-age=3600")
 
-                if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov6" title="2">{
+                if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov4" title="2">{
                         if strings.Contains(match, version.Version()) </span><span class="cov1" title="1">{
                                 res.WriteHeader(http.StatusNotModified)
                                 return
                         }</span>
                 }
 
-                <span class="cov6" title="2">fs.ServeHTTP(res, req)</span>
+                <span class="cov7" title="4">fs.ServeHTTP(res, req)</span>
         })
 }
 </pre>
@@ -581,7 +581,7 @@ const Name = "go-wol"
 var version = "devel"
 
 // Create a new version command with the given app name
-func NewCommand() *cobra.Command <span class="cov5" title="3">{
+func NewCommand() *cobra.Command <span class="cov4" title="3">{
         cmd := &amp;cobra.Command{
                 Use:   "version",
                 Short: "Print version information and exit",
@@ -590,13 +590,13 @@ func NewCommand() *cobra.Command <span class="cov5" title="3">{
                 }</span>,
         }
         // Override to prevent parent function from running
-        <span class="cov5" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
+        <span class="cov4" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
 
-        <span class="cov5" title="3">return cmd</span>
+        <span class="cov4" title="3">return cmd</span>
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="10">{
+func Version() string <span class="cov10" title="12">{
         return version
 }</span>
 
@@ -698,9 +698,9 @@ type MagicPacket struct {
 }
 
 // Create a new magic packet from the given mac address
-func CreatePacket(macAddrStr string) (*MagicPacket, error) <span class="cov5" title="7">{
+func CreatePacket(macAddrStr string) (*MagicPacket, error) <span class="cov5" title="8">{
         hwAddr, err := net.ParseMAC(macAddrStr)
-        if err != nil </span><span class="cov3" title="3">{
+        if err != nil </span><span class="cov4" title="4">{
                 return nil, err
         }</span>
 
