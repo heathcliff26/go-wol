@@ -57,7 +57,7 @@ $ podman run -d -net host -v /path/to/config.yaml:/config/config.yaml ghcr.io/he
 | Container Registry                                                                                     | Image                                      |
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
 | [Github Container](https://github.com/users/heathcliff26/packages/container/package/go-wol) | `ghcr.io/heathcliff26/go-wol`   |
-| [Docker Hub](https://hub.docker.com/repository/docker/heathcliff26/go-wol)                  | `docker.io/heathcliff26/go-wol` |
+| [Docker Hub](https://hub.docker.com/r/heathcliff26/go-wol)                  | `docker.io/heathcliff26/go-wol` |
 
 ### Tags
 
