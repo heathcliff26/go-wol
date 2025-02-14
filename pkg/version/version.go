@@ -9,8 +9,6 @@ import (
 
 const Name = "go-wol"
 
-var version = "devel"
-
 // Create a new version command with the given app name
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -28,7 +26,8 @@ func NewCommand() *cobra.Command {
 
 // Return the version string
 func Version() string {
-	return version
+	buildinfo, _ := debug.ReadBuildInfo()
+	return buildinfo.Main.Version
 }
 
 // Return a formated string containing the version, git commit and go version the app was compiled with.
@@ -48,7 +47,7 @@ func VersionInfoString() string {
 	}
 
 	result := Name + ":\n"
-	result += "    Version: " + version + "\n"
+	result += "    Version: " + buildinfo.Main.Version + "\n"
 	result += "    Commit:  " + commit + "\n"
 	result += "    Go:      " + runtime.Version() + "\n"
 
