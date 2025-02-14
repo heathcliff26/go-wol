@@ -71,7 +71,7 @@
 				
 				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
-				<option value="file8">github.com/heathcliff26/go-wol/pkg/version/version.go (75.0%)</option>
+				<option value="file8">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
 				
 				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
 				
@@ -578,8 +578,6 @@ import (
 
 const Name = "go-wol"
 
-var version = "devel"
-
 // Create a new version command with the given app name
 func NewCommand() *cobra.Command <span class="cov4" title="3">{
         cmd := &amp;cobra.Command{
@@ -597,14 +595,15 @@ func NewCommand() *cobra.Command <span class="cov4" title="3">{
 
 // Return the version string
 func Version() string <span class="cov10" title="12">{
-        return version
+        buildinfo, _ := debug.ReadBuildInfo()
+        return buildinfo.Main.Version
 }</span>
 
 // Return a formated string containing the version, git commit and go version the app was compiled with.
 func VersionInfoString() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
-        for _, item := range buildinfo.Settings </span><span class="cov0" title="0">{
+        for _, item := range buildinfo.Settings </span><span class="cov10" title="12">{
                 if item.Key == "vcs.revision" </span><span class="cov0" title="0">{
                         commit = item.Value
                         break</span>
@@ -617,7 +616,7 @@ func VersionInfoString() string <span class="cov1" title="1">{
         }</span>
 
         <span class="cov1" title="1">result := Name + ":\n"
-        result += "    Version: " + version + "\n"
+        result += "    Version: " + buildinfo.Main.Version + "\n"
         result += "    Commit:  " + commit + "\n"
         result += "    Go:      " + runtime.Version() + "\n"
 
