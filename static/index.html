@@ -19,7 +19,7 @@
         <div class="w3-third">
             <div class="w3-card w3-container w3-light-grey" style="min-height:460px">
                 <h2>Your Devices</h2>
-                <ul class="w3-ul w3-border w3-hoverable w3-margin-top w3-white">
+                <ul class="w3-ul w3-border w3-hoverable w3-margin w3-white">
                     {{range .}}
                     <li class="w3-hover-light-green">
                         <div class="w3-container w3-center">
@@ -27,7 +27,7 @@
                                 <h3>{{.Name}}</h3>
                             </div>
                             <div class="w3-half">
-                                <p>{{.MAC}}</p>
+                                <p style="font-size: 75%; align-content: center;">{{.MAC}}</p>
                             </div>
                         </div>
                         <div class="w3-container"><a class="w3-button w3-theme" onclick="wake('{{.MAC}}');">Wake</a></div>
