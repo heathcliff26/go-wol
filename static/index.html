@@ -1,46 +1,41 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <title>Wake on Lan</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/w3.css">
-    <link rel="stylesheet" href="/css/w3-theme-black.css">
+    <link rel="stylesheet" href="/css/bootstrap.css">
     <script type="text/javascript" src="/js/wake.js"></script>
 </head>
 
-<body class="w3-blue-grey">
-
-    <div class="w3-row-padding w3-center w3-margin-top">
-        <div class="w3-third">
-            <div class="w3-container"></div>
-        </div>
-        <div class="w3-third">
-            <div class="w3-card w3-container w3-light-grey" style="min-height:460px">
-                <h2>Your Devices</h2>
-                <ul class="w3-ul w3-border w3-hoverable w3-margin w3-white">
+<body>
+    <div class="container text-center">
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-3"></div>
+            <div class="card col-md-6 shadow-lg">
+                <h2 class="card-title">Your Devices</h2>
+                <ul class="card-body list-group">
                     {{range .}}
-                    <li class="w3-hover-light-green">
-                        <div class="w3-container w3-center">
-                            <div class="w3-half">
-                                <h3>{{.Name}}</h3>
+                    <li class="list-group-item shadow">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="fs-4 fw-bold">{{.Name}}</p>
                             </div>
-                            <div class="w3-half">
-                                <p style="font-size: 75%; align-content: center;">{{.MAC}}</p>
+                            <div class="col-md-6">
+                                <p class="fs-6 p-2">{{.MAC}}</p>
                             </div>
                         </div>
-                        <div class="w3-container"><a class="w3-button w3-theme" onclick="wake('{{.MAC}}');">Wake</a></div>
+                        <div class="row">
+                            <button type="button" class="btn btn-primary" onclick="wake('{{.MAC}}');">Wake</button>
+                        </div>
                     </li>
                     {{end}}
                 </ul>
             </div>
-        </div>
-        <div class="w3-third">
-            <div class="w3-container"></div>
+            <div class="col-md-3"></div>
         </div>
     </div>
-
 </body>
 
 </html>

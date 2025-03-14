@@ -15,7 +15,7 @@ func TestStaticFileServer(t *testing.T) {
 		assert := assert.New(t)
 
 		res := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/css/w3.css", nil)
+		req := httptest.NewRequest(http.MethodGet, "/css/bootstrap.css", nil)
 
 		fs := StaticFileServer(static.CSS)
 
@@ -29,7 +29,7 @@ func TestStaticFileServer(t *testing.T) {
 		assert := assert.New(t)
 
 		res := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/css/w3.css", nil)
+		req := httptest.NewRequest(http.MethodGet, "/css/bootstrap.css", nil)
 
 		req.Header.Add("If-None-Match", version.Version())
 
@@ -45,7 +45,7 @@ func TestStaticFileServer(t *testing.T) {
 		assert := assert.New(t)
 
 		res := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/css/w3.css", nil)
+		req := httptest.NewRequest(http.MethodGet, "/css/bootstrap.css", nil)
 
 		req.Header.Add("If-None-Match", "not-the-version")
 

@@ -19,6 +19,7 @@ It can be used directly via the cli, or remotely via a web interface.
     - [Image location](#image-location)
     - [Tags](#tags)
   - [Examples](#examples)
+  - [Development](#development)
   - [Credit](#credit)
 
 ## Usage
@@ -73,6 +74,11 @@ There are different flavors of the image:
 
 An example configuration for the server can be found [here](examples/config.yaml)
 
+## Development
+
+When changing the frontend, use the original bootstrap file `static/bootstrap/bootstrap.css` and not the trimmed version `static/css/bootstrap.css`
+
 ## Credit
 
-The css is the free to use template from w3schools: [Kitchen Sink/W3.CSS Demo Template](https://www.w3schools.com/w3css/tryw3css_templates_black.htm)
+For CSS bootrap is used: [Website](https://getbootstrap.com/) | [Github](https://github.com/twbs/bootstrap) | [Documentation](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+To trim the bootstrap file purgecss is used: [Website](https://purgecss.com/) | [Github](https://github.com/FullHuman/purgecss) | [Documentation](https://purgecss.com/getting-started.html)

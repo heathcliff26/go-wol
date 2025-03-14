@@ -28,6 +28,9 @@ fmt:
 validate:
 	hack/validate.sh
 
+generate-bootstrap:
+	hack/generate-bootstrap.sh
+
 clean:
 	rm -rf bin coverprofiles coverprofile.out
 
@@ -40,5 +43,6 @@ clean:
 	lint \
 	fmt \
 	validate \
+	generate-bootstrap \
 	clean \
 	$(NULL)
