@@ -7,3 +7,6 @@ test-config.yaml
 # Generated go-test coverage reports
 coverprofiles/
 coverprofile.out
+
+# Ignore bootstrap dist files
+/bootstrap-*

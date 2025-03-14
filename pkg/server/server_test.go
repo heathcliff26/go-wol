@@ -142,10 +142,10 @@ func TestServer(t *testing.T) {
 	t.Run("CSS", func(t *testing.T) {
 		assert := assert.New(t)
 
-		file, err := static.CSS.ReadFile("css/w3.css")
+		file, err := static.CSS.ReadFile("css/bootstrap.css")
 		assert.NoError(err, "Should read file from static")
 
-		res, err := http.Get(address + "/css/w3.css")
+		res, err := http.Get(address + "/css/bootstrap.css")
 		t.Cleanup(func() {
 			res.Body.Close()
 		})
