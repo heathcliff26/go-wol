@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestApi(t *testing.T) {
+func TestAPI(t *testing.T) {
 	tMatrix := []struct {
 		Name, MAC string
 		Status    int
@@ -29,7 +29,7 @@ func TestApi(t *testing.T) {
 			Status: http.StatusBadRequest,
 			Response: Response{
 				Status: "error",
-				Reason: "Failed to create magic packet from MAC address",
+				Reason: "Invalid MAC address",
 			},
 		},
 	}
@@ -39,7 +39,7 @@ func TestApi(t *testing.T) {
 			assert := assert.New(t)
 
 			mux := http.NewServeMux()
-			mux.HandleFunc("GET /api/{macAddr}", Api)
+			mux.HandleFunc("GET /api/{macAddr}", API)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/"+tCase.MAC, nil)
 			rr := httptest.NewRecorder()

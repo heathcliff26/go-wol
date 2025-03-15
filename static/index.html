@@ -31,6 +31,15 @@
                         </div>
                     </li>
                     {{end}}
+                    <li class="list-group-item shadow">
+                        <form class="form-floating mb-3 needs-validation" id="custom-mac-form" onsubmit="wakeCustom(); return false;">
+                            <input type="text" class="form-control" id="custom-mac-input" placeholder="Custom MAC" minlength="17" maxlength="17" required>
+                            <label for="custom-mac">Custom MAC</label>
+                        </form>
+                        <div class="row">
+                            <button type="submit" form="custom-mac-form" class="btn btn-primary">Wake</button>
+                        </div>
+                    </li>
                 </ul>
             </div>
             <div class="col-md-3"></div>

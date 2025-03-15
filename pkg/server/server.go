@@ -69,7 +69,7 @@ func (s *Server) Run() error {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.indexHandler)
 	router.HandleFunc("GET /index.html", s.indexHandler)
-	router.HandleFunc("GET /api/{macAddr}", api.Api)
+	router.HandleFunc("GET /api/{macAddr}", api.API)
 	router.Handle("GET /css/", StaticFileServer(static.CSS))
 	router.Handle("GET /js/", StaticFileServer(static.JS))
 
