@@ -13,3 +13,8 @@ async function wake(macAddr) {
         console.error(error.message);
     }
 }
+
+async function wakeCustom() {
+    const inputCustomMAC = document.getElementById("custom-mac-input");
+    wake(inputCustomMAC.value);
+}

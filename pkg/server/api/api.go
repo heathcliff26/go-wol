@@ -13,14 +13,14 @@ type Response struct {
 	Reason string `json:"reason"`
 }
 
-func Api(res http.ResponseWriter, req *http.Request) {
+func API(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 
 	packet, err := wol.CreatePacket(macAddr)
 	if err != nil {
-		slog.Info("Failed to create magic packet from MAC address", slog.String("mac", macAddr), slog.Any("error", err))
+		slog.Info("Client send invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
 		res.WriteHeader(http.StatusBadRequest)
-		sendResponse(res, "Failed to create magic packet from MAC address")
+		sendResponse(res, "Invalid MAC address")
 		return
 	}
 
