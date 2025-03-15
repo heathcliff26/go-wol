@@ -9,9 +9,9 @@ async function wake(macAddr, name = "") {
         const responseBody = await response.json();
 
         if (response.ok) {
-            alert("Send magic packet to " + displayName);
+            appendAlert("Send magic packet to " + displayName);
         } else {
-            alert("Failed to send magic packet to " + displayName + " : " + responseBody.reason);
+            appendAlert("Failed to send magic packet to " + displayName + " : " + responseBody.reason, "warning");
         }
     } catch (error) {
         console.error(error.message);
