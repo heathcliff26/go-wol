@@ -162,14 +162,14 @@ type Response struct {
         Reason string `json:"reason"`
 }
 
-func Api(res http.ResponseWriter, req *http.Request) <span class="cov10" title="3">{
+func API(res http.ResponseWriter, req *http.Request) <span class="cov10" title="3">{
         macAddr := req.PathValue("macAddr")
 
         packet, err := wol.CreatePacket(macAddr)
         if err != nil </span><span class="cov6" title="2">{
-                slog.Info("Failed to create magic packet from MAC address", slog.String("mac", macAddr), slog.Any("error", err))
+                slog.Info("Client send invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
                 res.WriteHeader(http.StatusBadRequest)
-                sendResponse(res, "Failed to create magic packet from MAC address")
+                sendResponse(res, "Invalid MAC address")
                 return
         }</span>
 
@@ -509,7 +509,7 @@ func (s *Server) Run() error <span class="cov6" title="2">{
         router := http.NewServeMux()
         router.HandleFunc("GET /{$}", s.indexHandler)
         router.HandleFunc("GET /index.html", s.indexHandler)
-        router.HandleFunc("GET /api/{macAddr}", api.Api)
+        router.HandleFunc("GET /api/{macAddr}", api.API)
         router.Handle("GET /css/", StaticFileServer(static.CSS))
         router.Handle("GET /js/", StaticFileServer(static.JS))
 
