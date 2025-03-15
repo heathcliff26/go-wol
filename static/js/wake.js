@@ -1,3 +1,5 @@
+'use strict';
+
 async function wake(macAddr, name = "") {
     const displayName = name != "" ? name + " (" + macAddr + ")" : macAddr
 
