@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/bootstrap.css">
+    <script type="text/javascript" src="/js/alert.js"></script>
     <script type="text/javascript" src="/js/theme.js"></script>
     <script type="text/javascript" src="/js/wake.js"></script>
 </head>
@@ -14,35 +15,42 @@
     <div class="container text-center">
         <div class="row justify-content-center mt-3">
             <div class="col-md-3"></div>
-            <div class="card col-md-6 shadow-lg">
-                <h2 class="card-title">Your Devices</h2>
-                <ul class="card-body list-group">
-                    {{range .}}
-                    <li class="list-group-item shadow">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="fs-4 fw-bold">{{.Name}}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="fs-6 p-2">{{.MAC}}</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <button type="button" class="btn btn-primary" onclick="wake('{{.MAC}}', '{{.Name}}');">Wake</button>
-                        </div>
-                    </li>
-                    {{end}}
-                    <li class="list-group-item shadow">
-                        <form class="form-floating mb-3 needs-validation" id="custom-mac-form" onsubmit="wakeCustom(); return false;">
-                            <input type="text" class="form-control" id="custom-mac-input" placeholder="Custom MAC" minlength="17" maxlength="17" required>
-                            <label for="custom-mac">Custom MAC</label>
-                        </form>
-                        <div class="row">
-                            <button type="submit" form="custom-mac-form" class="btn btn-primary">Wake</button>
-                        </div>
-                    </li>
-                </ul>
+
+            <div class="col-md-6">
+                <div id="alertPlaceholder"></div>
+                <div class="card shadow-lg">
+                    <h2 class="card-title">Your Devices</h2>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {{range .}}
+                            <li class="list-group-item shadow">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="fs-4 fw-bold">{{.Name}}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="fs-6 p-2">{{.MAC}}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <button type="button" class="btn btn-primary" onclick="wake('{{.MAC}}', '{{.Name}}');">Wake</button>
+                                </div>
+                            </li>
+                            {{end}}
+                            <li class="list-group-item shadow">
+                                <form class="form-floating mb-3 needs-validation" id="custom-mac-form" onsubmit="wakeCustom(); return false;">
+                                    <input type="text" class="form-control" id="custom-mac-input" placeholder="Custom MAC" minlength="17" maxlength="17" required>
+                                    <label for="custom-mac-input">Custom MAC</label>
+                                </form>
+                                <div class="row">
+                                    <button type="submit" form="custom-mac-form" class="btn btn-primary">Wake</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
+
             <div class="col-md-3"></div>
         </div>
     </div>
