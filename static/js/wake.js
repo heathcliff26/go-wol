@@ -1,13 +1,15 @@
-async function wake(macAddr) {
+async function wake(macAddr, name = "") {
+    const displayName = name != "" ? name + " (" + macAddr + ")" : macAddr
+
     try {
         const response = await fetch("/api/" + macAddr);
 
         const responseBody = await response.json();
 
         if (response.ok) {
-            alert("Send magic packet");
+            alert("Send magic packet to " + displayName);
         } else {
-            alert("Error: " + responseBody.reason);
+            alert("Failed to send magic packet to " + displayName + " : " + responseBody.reason);
         }
     } catch (error) {
         console.error(error.message);

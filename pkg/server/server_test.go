@@ -39,7 +39,7 @@ func TestNewServer(t *testing.T) {
 
 	assert.Contains(s.indexHTML, "testName", "Should add hostname to index.html")
 	assert.Contains(s.indexHTML, "testMAC", "Should add MAC to index.html")
-	assert.Contains(s.indexHTML, "onclick=\"wake('testMAC');\"", "Should add onClick javascript function call with MAC")
+	assert.Contains(s.indexHTML, "onclick=\"wake('testMAC', 'testName');\"", "Should add onClick javascript function call with MAC")
 	assert.NotEmpty(s.indexChecksum, "Server should have checksum of index.html")
 }
 
