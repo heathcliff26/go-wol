@@ -67,7 +67,7 @@
 				
 				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/config/errors.go (0.0%)</option>
 				
-				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (86.1%)</option>
+				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (86.5%)</option>
 				
 				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
@@ -511,6 +511,7 @@ func (s *Server) Run() error <span class="cov6" title="2">{
         router.HandleFunc("GET /index.html", s.indexHandler)
         router.HandleFunc("GET /api/{macAddr}", api.API)
         router.Handle("GET /css/", StaticFileServer(static.CSS))
+        router.Handle("GET /icons/", StaticFileServer(static.Icons))
         router.Handle("GET /js/", StaticFileServer(static.JS))
 
         server := http.Server{
@@ -547,22 +548,22 @@ import (
         "github.com/heathcliff26/simple-fileserver/pkg/filesystem"
 )
 
-func StaticFileServer(root embed.FS) http.Handler <span class="cov10" title="7">{
+func StaticFileServer(root embed.FS) http.Handler <span class="cov10" title="9">{
         indexlessFS := filesystem.NewIndexlessFilesystem(http.FS(root))
         fs := http.FileServer(indexlessFS)
 
-        return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) </span><span class="cov8" title="5">{
+        return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) </span><span class="cov8" title="6">{
                 res.Header().Set("ETag", version.Version())
                 res.Header().Set("Cache-Control", "public, max-age=3600")
 
-                if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov4" title="2">{
+                if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov3" title="2">{
                         if strings.Contains(match, version.Version()) </span><span class="cov1" title="1">{
                                 res.WriteHeader(http.StatusNotModified)
                                 return
                         }</span>
                 }
 
-                <span class="cov7" title="4">fs.ServeHTTP(res, req)</span>
+                <span class="cov7" title="5">fs.ServeHTTP(res, req)</span>
         })
 }
 </pre>
@@ -594,7 +595,7 @@ func NewCommand() *cobra.Command <span class="cov4" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="12">{
+func Version() string <span class="cov10" title="13">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
@@ -603,7 +604,7 @@ func Version() string <span class="cov10" title="12">{
 func VersionInfoString() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
-        for _, item := range buildinfo.Settings </span><span class="cov10" title="12">{
+        for _, item := range buildinfo.Settings </span><span class="cov9" title="12">{
                 if item.Key == "vcs.revision" </span><span class="cov0" title="0">{
                         commit = item.Value
                         break</span>
