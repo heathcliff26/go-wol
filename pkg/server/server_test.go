@@ -155,6 +155,22 @@ func TestServer(t *testing.T) {
 		body, _ := io.ReadAll(res.Body)
 		assert.Equal(string(file), string(body), "Response should match file")
 	})
+	t.Run("Icons", func(t *testing.T) {
+		assert := assert.New(t)
+
+		file, err := static.Icons.ReadFile("icons/favicon.svg")
+		assert.NoError(err, "Should read file from static")
+
+		res, err := http.Get(address + "/icons/favicon.svg")
+		t.Cleanup(func() {
+			res.Body.Close()
+		})
+
+		assert.NoError(err, "Request should not return an error")
+		assert.Equal(http.StatusOK, res.StatusCode, "Request should not return an error")
+		body, _ := io.ReadAll(res.Body)
+		assert.Equal(string(file), string(body), "Response should match file")
+	})
 	t.Run("JS", func(t *testing.T) {
 		assert := assert.New(t)
 

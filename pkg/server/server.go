@@ -71,6 +71,7 @@ func (s *Server) Run() error {
 	router.HandleFunc("GET /index.html", s.indexHandler)
 	router.HandleFunc("GET /api/{macAddr}", api.API)
 	router.Handle("GET /css/", StaticFileServer(static.CSS))
+	router.Handle("GET /icons/", StaticFileServer(static.Icons))
 	router.Handle("GET /js/", StaticFileServer(static.JS))
 
 	server := http.Server{

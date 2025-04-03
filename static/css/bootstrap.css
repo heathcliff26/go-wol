@@ -243,6 +243,11 @@ ul ul {
   margin-bottom: 0;
 }
 
+
+svg {
+  vertical-align: middle;
+}
+
 label {
   display: inline-block;
 }
