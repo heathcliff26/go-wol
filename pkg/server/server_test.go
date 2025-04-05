@@ -139,52 +139,24 @@ func TestServer(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(http.StatusBadRequest, res.StatusCode, "Should receive a bad request response when using a malformed mac address")
 	})
-	t.Run("CSS", func(t *testing.T) {
-		assert := assert.New(t)
 
-		file, err := static.CSS.ReadFile("css/bootstrap.css")
-		assert.NoError(err, "Should read file from static")
+	assetTMatrix := map[string]string{"CSS": "css/bootstrap.css", "Icons": "icons/favicon.svg", "JS": "js/wake.js"}
+	for name, path := range assetTMatrix {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
 
-		res, err := http.Get(address + "/css/bootstrap.css")
-		t.Cleanup(func() {
-			res.Body.Close()
+			file, err := static.Assets.ReadFile(path)
+			assert.NoError(err, "Should read file from static")
+
+			res, err := http.Get(address + "/" + path)
+			t.Cleanup(func() {
+				res.Body.Close()
+			})
+
+			assert.NoError(err, "Request should not return an error")
+			assert.Equal(http.StatusOK, res.StatusCode, "Request should not return an error")
+			body, _ := io.ReadAll(res.Body)
+			assert.Equal(string(file), string(body), "Response should match file")
 		})
-
-		assert.NoError(err, "Request should not return an error")
-		assert.Equal(http.StatusOK, res.StatusCode, "Request should not return an error")
-		body, _ := io.ReadAll(res.Body)
-		assert.Equal(string(file), string(body), "Response should match file")
-	})
-	t.Run("Icons", func(t *testing.T) {
-		assert := assert.New(t)
-
-		file, err := static.Icons.ReadFile("icons/favicon.svg")
-		assert.NoError(err, "Should read file from static")
-
-		res, err := http.Get(address + "/icons/favicon.svg")
-		t.Cleanup(func() {
-			res.Body.Close()
-		})
-
-		assert.NoError(err, "Request should not return an error")
-		assert.Equal(http.StatusOK, res.StatusCode, "Request should not return an error")
-		body, _ := io.ReadAll(res.Body)
-		assert.Equal(string(file), string(body), "Response should match file")
-	})
-	t.Run("JS", func(t *testing.T) {
-		assert := assert.New(t)
-
-		file, err := static.JS.ReadFile("js/wake.js")
-		assert.NoError(err, "Should read file from static")
-
-		res, err := http.Get(address + "/js/wake.js")
-		t.Cleanup(func() {
-			res.Body.Close()
-		})
-
-		assert.NoError(err, "Request should not return an error")
-		assert.Equal(http.StatusOK, res.StatusCode, "Request should not return an error")
-		body, _ := io.ReadAll(res.Body)
-		assert.Equal(string(file), string(body), "Response should match file")
-	})
+	}
 }
