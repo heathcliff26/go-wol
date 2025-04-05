@@ -66,13 +66,15 @@ func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) {
 
 // Starts the server and exits with error if that fails
 func (s *Server) Run() error {
+	assetFS := StaticFileServer(static.Assets)
+
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.indexHandler)
 	router.HandleFunc("GET /index.html", s.indexHandler)
 	router.HandleFunc("GET /api/{macAddr}", api.API)
-	router.Handle("GET /css/", StaticFileServer(static.CSS))
-	router.Handle("GET /icons/", StaticFileServer(static.Icons))
-	router.Handle("GET /js/", StaticFileServer(static.JS))
+	router.Handle("GET /css/", assetFS)
+	router.Handle("GET /icons/", assetFS)
+	router.Handle("GET /js/", assetFS)
 
 	server := http.Server{
 		Addr:    s.addr,
