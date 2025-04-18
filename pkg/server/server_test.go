@@ -140,7 +140,7 @@ func TestServer(t *testing.T) {
 		assert.Equal(http.StatusBadRequest, res.StatusCode, "Should receive a bad request response when using a malformed mac address")
 	})
 
-	assetTMatrix := map[string]string{"CSS": "css/bootstrap.css", "Icons": "icons/favicon.svg", "JS": "js/wake.js"}
+	assetTMatrix := map[string]string{"CSS": "css/bootstrap.css", "Icons": "icons/favicon.svg", "JS": "js/client.js"}
 	for name, path := range assetTMatrix {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)

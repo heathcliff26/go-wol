@@ -23,9 +23,21 @@ function appendAlert(message, type = "success") {
     dismissButton.setAttribute("data-bs-dismiss", "alert");
     dismissButton.setAttribute("aria-label", "Close");
     dismissButton.onclick = function () {
-        document.getElementById(wrapper.id).remove();
+        let currentAlert = document.getElementById(wrapper.id);
+        if (currentAlert) {
+            currentAlert.remove();
+        }
     };
     wrapper.append(dismissButton);
 
     alertPlaceholder.append(wrapper);
+}
+
+let modal = null;
+
+function showAddHostModal() {
+    if (!modal) {
+        modal = new bootstrap.Modal(document.getElementById('addHostModal'));
+    }
+    modal.show();
 }
