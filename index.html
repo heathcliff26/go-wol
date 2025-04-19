@@ -61,21 +61,35 @@
 				
 				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/api.go (72.0%)</option>
 				
-				<option value="file3">github.com/heathcliff26/go-wol/pkg/server/cmd.go (20.0%)</option>
+				<option value="file3">github.com/heathcliff26/go-wol/pkg/server/cmd.go (17.9%)</option>
 				
 				<option value="file4">github.com/heathcliff26/go-wol/pkg/server/config/config.go (100.0%)</option>
 				
 				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/config/errors.go (0.0%)</option>
 				
-				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (86.8%)</option>
+				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (87.9%)</option>
 				
 				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
-				<option value="file8">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
+				<option value="file8">github.com/heathcliff26/go-wol/pkg/server/storage/config.go (100.0%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (75.0%)</option>
 				
-				<option value="file10">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
+				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
+				
+				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (82.1%)</option>
+				
+				<option value="file12">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
+				
+				<option value="file13">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/race.go (100.0%)</option>
+				
+				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (80.0%)</option>
+				
+				<option value="file15">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
+				
+				<option value="file16">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				
+				<option value="file17">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
 				
 				</select>
 			</div>
@@ -211,6 +225,7 @@ func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" tit
 
 import (
         "fmt"
+        "log/slog"
         "os"
 
         "github.com/heathcliff26/go-wol/pkg/server/config"
@@ -256,12 +271,18 @@ func run(cmd *cobra.Command) error <span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">config, err := config.LoadConfig(configPath, env, logLevel)
+        <span class="cov0" title="0">cfg, err := config.LoadConfig(configPath, env, logLevel)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
 
-        <span class="cov0" title="0">server, err := NewServer(config)
+        // TODO: Remove when api functions have been implemented
+        <span class="cov0" title="0">if !cfg.Storage.Readonly </span><span class="cov0" title="0">{
+                slog.Warn("Writing to storage is not yet supported, ignoring setting")
+        }</span>
+        <span class="cov0" title="0">cfg.Storage.Readonly = true
+
+        server, err := NewServer(cfg.Server, cfg.Storage)
         if err != nil </span><span class="cov0" title="0">{
                 return err
         }</span>
@@ -277,6 +298,7 @@ import (
         "os"
         "strings"
 
+        "github.com/heathcliff26/go-wol/pkg/server/storage"
         "sigs.k8s.io/yaml"
 )
 
@@ -301,10 +323,14 @@ func init() <span class="cov5" title="4">{
 }</span>
 
 type Config struct {
-        LogLevel string    `json:"logLevel,omitempty"`
-        Port     int       `json:"port,omitempty"`
-        SSL      SSLConfig `json:"ssl,omitempty"`
-        Hosts    []Host    `json:"hosts,omitempty"`
+        LogLevel string                `json:"logLevel,omitempty"`
+        Server   ServerConfig          `json:"server,omitempty"`
+        Storage  storage.StorageConfig `json:"storage,omitempty"`
+}
+
+type ServerConfig struct {
+        Port int       `json:"port,omitempty"`
+        SSL  SSLConfig `json:"ssl,omitempty"`
 }
 
 type SSLConfig struct {
@@ -313,22 +339,20 @@ type SSLConfig struct {
         Key     string `json:"key,omitempty"`
 }
 
-type Host struct {
-        Name string `json:"name"`
-        MAC  string `json:"mac"`
-}
-
 // Returns a Config with default values set
-func DefaultConfig() Config <span class="cov8" title="14">{
+func DefaultConfig() Config <span class="cov8" title="13">{
         return Config{
                 LogLevel: DEFAULT_LOG_LEVEL,
-                Port:     DEFAULT_SERVER_PORT,
+                Server: ServerConfig{
+                        Port: DEFAULT_SERVER_PORT,
+                },
+                Storage: storage.NewDefaultStorageConfig(),
         }
 }</span>
 
 // Return the path to the cobfig file
-func getPath(path string) string <span class="cov9" title="16">{
-        if path != "" </span><span class="cov8" title="13">{
+func getPath(path string) string <span class="cov9" title="15">{
+        if path != "" </span><span class="cov8" title="12">{
                 return path
         }</span>
         <span class="cov4" title="3">if _, ok := os.LookupEnv("container"); ok </span><span class="cov1" title="1">{
@@ -344,35 +368,29 @@ func getPath(path string) string <span class="cov9" title="16">{
 //                path: Path to config file, if empty will use either DEFAULT_CONFIG_PATH or DEFAULT_CONFIG_PATH_CONTAINER
 //                env: Determines if enviroment variables in the file will be expanded before decoding
 //         logLevelOverride: Override the log level given by the config
-func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="13">{
+func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="12">{
         c, err := loadConfigFile(path, env)
         if err != nil </span><span class="cov4" title="3">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="10">if logLevelOverride == "" </span><span class="cov7" title="9">{
+        <span class="cov7" title="9">if logLevelOverride == "" </span><span class="cov7" title="8">{
                 err = setLogLevel(c.LogLevel)
         }</span> else<span class="cov1" title="1"> {
                 err = setLogLevel(logLevelOverride)
         }</span>
-        <span class="cov7" title="10">if err != nil </span><span class="cov1" title="1">{
+        <span class="cov7" title="9">if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="9">if c.SSL.Enabled &amp;&amp; (c.SSL.Cert == "" || c.SSL.Key == "") </span><span class="cov3" title="2">{
+        <span class="cov7" title="8">if c.Server.SSL.Enabled &amp;&amp; (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") </span><span class="cov3" title="2">{
                 return Config{}, ErrIncompleteSSLConfig{}
         }</span>
-
-        <span class="cov6" title="7">for _, host := range c.Hosts </span><span class="cov1" title="1">{
-                if host.MAC == "" </span><span class="cov1" title="1">{
-                        return Config{}, ErrMissingMAC{}
-                }</span>
-        }
 
         <span class="cov6" title="6">return c, nil</span>
 }
 
-func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="13">{
+func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="12">{
         c := DefaultConfig()
 
         p := getPath(path)
@@ -381,26 +399,26 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" ti
         if path == "" &amp;&amp; os.IsNotExist(err) </span><span class="cov1" title="1">{
                 slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
                 return c, nil
-        }</span> else<span class="cov8" title="12"> if err != nil </span><span class="cov1" title="1">{
+        }</span> else<span class="cov8" title="11"> if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov8" title="11">if env </span><span class="cov1" title="1">{
+        <span class="cov8" title="10">if env </span><span class="cov1" title="1">{
                 f = []byte(os.ExpandEnv(string(f)))
         }</span>
 
-        <span class="cov8" title="11">err = yaml.Unmarshal(f, &amp;c)
+        <span class="cov8" title="10">err = yaml.Unmarshal(f, &amp;c)
         if err != nil </span><span class="cov3" title="2">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="9">return c, nil</span>
+        <span class="cov7" title="8">return c, nil</span>
 }
 
 // Parse a given string and set the resulting log level
-func setLogLevel(level string) error <span class="cov10" title="20">{
+func setLogLevel(level string) error <span class="cov10" title="19">{
         switch strings.ToLower(level) </span>{
-        case "debug":<span class="cov6" title="6">
+        case "debug":<span class="cov5" title="5">
                 logLevel.Set(slog.LevelDebug)</span>
         case "info":<span class="cov6" title="6">
                 logLevel.Set(slog.LevelInfo)</span>
@@ -411,7 +429,7 @@ func setLogLevel(level string) error <span class="cov10" title="20">{
         default:<span class="cov3" title="2">
                 return &amp;ErrUnknownLogLevel{level}</span>
         }
-        <span class="cov9" title="18">return nil</span>
+        <span class="cov9" title="17">return nil</span>
 }
 </pre>
 		
@@ -430,22 +448,13 @@ type ErrIncompleteSSLConfig struct{}
 func (e ErrIncompleteSSLConfig) Error() string <span class="cov0" title="0">{
         return "SSL is enabled but certificate and/or private key are missing"
 }</span>
-
-type ErrMissingMAC struct{}
-
-func (e ErrMissingMAC) Error() string <span class="cov0" title="0">{
-        return "At least one host has a missing mac address."
-}</span>
 </pre>
 		
 		<pre class="file" id="file6" style="display: none">package server
 
 import (
-        "bytes"
-        "crypto/sha256"
-        "encoding/hex"
         "errors"
-        "html/template"
+        "fmt"
         "log/slog"
         "net/http"
         "strconv"
@@ -453,52 +462,43 @@ import (
 
         "github.com/heathcliff26/go-wol/pkg/server/api"
         "github.com/heathcliff26/go-wol/pkg/server/config"
+        "github.com/heathcliff26/go-wol/pkg/server/storage"
         "github.com/heathcliff26/go-wol/static"
         "github.com/heathcliff26/simple-fileserver/pkg/middleware"
 )
 
 type Server struct {
-        addr          string
-        ssl           config.SSLConfig
-        indexHTML     string
-        indexChecksum string
+        addr    string
+        ssl     config.SSLConfig
+        storage *storage.Storage
 }
 
-func NewServer(c config.Config) (*Server, error) <span class="cov10" title="3">{
-        tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
+func NewServer(cfgServer config.ServerConfig, cfgStorage storage.StorageConfig) (*Server, error) <span class="cov10" title="3">{
+        storage, err := storage.NewStorage(cfgStorage)
         if err != nil </span><span class="cov0" title="0">{
-                return nil, err
+                return nil, fmt.Errorf("failed to create storage: %w", err)
         }</span>
 
-        <span class="cov10" title="3">var buf bytes.Buffer
-        err = tmpl.Execute(&amp;buf, c.Hosts)
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, err
-        }</span>
-        <span class="cov10" title="3">indexHTML := buf.String()
-
-        checksum := sha256.Sum256([]byte(indexHTML))
-
-        return &amp;Server{
-                addr:          ":" + strconv.Itoa(c.Port),
-                ssl:           c.SSL,
-                indexHTML:     indexHTML,
-                indexChecksum: hex.EncodeToString(checksum[:]),
+        <span class="cov10" title="3">return &amp;Server{
+                addr:    ":" + strconv.Itoa(cfgServer.Port),
+                ssl:     cfgServer.SSL,
+                storage: storage,
         }, nil</span>
 }
 
 func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) <span class="cov10" title="3">{
-        res.Header().Set("ETag", s.indexChecksum)
+        indexHTML, indexChecksum := s.storage.GetIndexHTML()
+        res.Header().Set("ETag", indexChecksum)
         res.Header().Set("Cache-Control", "public, max-age=300")
 
         if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov1" title="1">{
-                if strings.Contains(match, s.indexChecksum) </span><span class="cov1" title="1">{
+                if strings.Contains(match, indexChecksum) </span><span class="cov1" title="1">{
                         res.WriteHeader(http.StatusNotModified)
                         return
                 }</span>
         }
 
-        <span class="cov6" title="2">count, err := res.Write([]byte(s.indexHTML))
+        <span class="cov6" title="2">count, err := res.Write([]byte(indexHTML))
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to write index.html to client", "err", err, slog.Int("written", count))
         }</span>
@@ -570,7 +570,567 @@ func StaticFileServer(root embed.FS) http.Handler <span class="cov9" title="5">{
 }
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package version
+		<pre class="file" id="file8" style="display: none">package storage
+
+import "github.com/heathcliff26/go-wol/pkg/server/storage/file"
+
+const (
+        // TODO: Make default true when implementing api
+        DEFAULT_READONLY     = true
+        DEFAULT_BACKEND_TYPE = "file"
+)
+
+type StorageConfig struct {
+        Type     string                 `json:"type"`
+        Readonly bool                   `json:"-,omitempty"`
+        File     file.FileBackendConfig `json:"file,omitempty"`
+}
+
+func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="19">{
+        return StorageConfig{
+                Type:     DEFAULT_BACKEND_TYPE,
+                Readonly: DEFAULT_READONLY,
+                File:     file.NewDefaultFileBackendConfig(),
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package file
+
+import "os"
+
+const (
+        DEFAULT_FILE_PATH           = "hosts.yaml"
+        DEFAULT_FILE_PATH_CONTAINER = "/data/hosts.yaml"
+)
+
+type FileBackendConfig struct {
+        Path string `json:"path,omitempty"`
+}
+
+func NewDefaultFileBackendConfig() FileBackendConfig <span class="cov10" title="19">{
+        cfg := FileBackendConfig{
+                Path: DEFAULT_FILE_PATH,
+        }
+        if _, ok := os.LookupEnv("container"); ok </span><span class="cov0" title="0">{
+                cfg.Path = DEFAULT_FILE_PATH_CONTAINER
+        }</span>
+        <span class="cov10" title="19">return cfg</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package file
+
+import (
+        "fmt"
+        "log/slog"
+        "os"
+        "strings"
+        "sync"
+
+        "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "sigs.k8s.io/yaml"
+)
+
+type FileBackend struct {
+        path    string
+        storage *fileStorage
+        lock    sync.RWMutex
+}
+
+type fileStorage struct {
+        Hosts []types.Host `json:"hosts"`
+}
+
+func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="25">{
+        fb := &amp;FileBackend{
+                path: cfg.Path,
+                storage: &amp;fileStorage{
+                        Hosts: []types.Host{},
+                },
+        }
+
+        f, err := os.ReadFile(cfg.Path)
+        if os.IsNotExist(err) </span><span class="cov3" title="14">{
+                slog.Info("File not found, creating new file", slog.String("path", cfg.Path))
+                err := fb.save()
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to create new storage file: %w", err)
+                }</span>
+                <span class="cov3" title="14">return fb, nil</span>
+        } else<span class="cov3" title="11"> if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("failed to read storage file: %w", err)
+        }</span>
+
+        <span class="cov3" title="10">err = yaml.Unmarshal(f, fb.storage)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("failed to unmarshal storage file: %w", err)
+        }</span>
+
+        <span class="cov3" title="9">slog.Debug("Storage file loaded", slog.String("path", cfg.Path))
+
+        // Ensure that all MAC addresses are uppercase and unique
+        macSet := make(map[string]bool, len(fb.storage.Hosts))
+        uniqueHosts := make([]types.Host, 0, len(fb.storage.Hosts))
+        changed := false
+        for _, host := range fb.storage.Hosts </span><span class="cov3" title="17">{
+                uppercaseMAC := strings.ToUpper(host.MAC)
+                if !macSet[uppercaseMAC] </span><span class="cov3" title="13">{
+                        macSet[uppercaseMAC] = true
+                        uniqueHosts = append(uniqueHosts, types.Host{MAC: uppercaseMAC, Name: host.Name})
+                }</span> else<span class="cov2" title="4"> {
+                        changed = true
+                }</span>
+                <span class="cov3" title="17">if host.MAC != uppercaseMAC </span><span class="cov1" title="1">{
+                        changed = true
+                }</span>
+        }
+        <span class="cov3" title="9">fb.storage.Hosts = uniqueHosts
+
+        if changed </span><span class="cov2" title="3">{
+                err := fb.save()
+                if err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to save storage file after ensuring unique, uppercase MAC addresses: %w", err)
+                }</span>
+        }
+
+        <span class="cov3" title="8">return fb, nil</span>
+}
+
+// Add a new host, overwrite existing host name if it already exists.
+// Ensures that the MAC address is unique and uppercase.
+func (fb *FileBackend) AddHost(mac string, name string) error <span class="cov6" title="141">{
+        fb.lock.Lock()
+        defer fb.lock.Unlock()
+
+        uppercaseMAC := strings.ToUpper(mac)
+        for i, host := range fb.storage.Hosts </span><span class="cov10" title="5030">{
+                if host.MAC == uppercaseMAC </span><span class="cov0" title="0">{
+                        fb.storage.Hosts[i].Name = name
+                        return fb.save()
+                }</span>
+        }
+
+        <span class="cov6" title="141">fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
+        return fb.save()</span>
+}
+
+// Remove a host, ignore if the host does not exist
+func (fb *FileBackend) RemoveHost(mac string) error <span class="cov5" title="104">{
+        fb.lock.Lock()
+        defer fb.lock.Unlock()
+
+        uppercaseMAC := strings.ToUpper(mac)
+        for i, host := range fb.storage.Hosts </span><span class="cov7" title="405">{
+                if host.MAC == uppercaseMAC </span><span class="cov2" title="4">{
+                        fb.storage.Hosts = append(fb.storage.Hosts[:i], fb.storage.Hosts[i+1:]...)
+                        return fb.save()
+                }</span>
+        }
+        <span class="cov5" title="100">return nil</span>
+}
+
+// Return the host name for a given MAC address, return empty if not found
+func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" title="104">{
+        fb.lock.RLock()
+        defer fb.lock.RUnlock()
+
+        uppercaseMAC := strings.ToUpper(mac)
+        for _, host := range fb.storage.Hosts </span><span class="cov5" title="113">{
+                if host.MAC == uppercaseMAC </span><span class="cov5" title="101">{
+                        return host.Name, nil
+                }</span>
+        }
+        <span class="cov2" title="3">return "", nil</span>
+}
+
+// Return all hosts
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov5" title="107">{
+        fb.lock.RLock()
+        defer fb.lock.RUnlock()
+
+        return append([]types.Host{}, fb.storage.Hosts...), nil
+}</span>
+
+// Check if the storage backend is readonly
+func (fb *FileBackend) Readonly() (bool, error) <span class="cov2" title="4">{
+        f, err := os.OpenFile(fb.path, os.O_RDWR, 0644)
+        if err != nil </span><span class="cov1" title="2">{
+                return true, nil
+        }</span>
+        <span class="cov1" title="2">f.Close()
+        return false, nil</span>
+}
+
+func (fb *FileBackend) save() error <span class="cov6" title="162">{
+        data, err := yaml.Marshal(fb.storage)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to marshal storage data: %w", err)
+        }</span>
+
+        <span class="cov6" title="162">err = os.WriteFile(fb.path, data, 0644)
+        if err != nil </span><span class="cov1" title="1">{
+                return fmt.Errorf("failed to write storage file: %w", err)
+        }</span>
+
+        <span class="cov6" title="161">slog.Debug("Storage file saved", slog.String("path", fb.path))
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package storage
+
+import (
+        "bytes"
+        "crypto/sha256"
+        "encoding/hex"
+        "fmt"
+        "html/template"
+        "sync"
+
+        "github.com/heathcliff26/go-wol/pkg/server/storage/file"
+        "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "github.com/heathcliff26/go-wol/static"
+)
+
+type Storage struct {
+        backend  types.StorageBackend
+        readonly bool
+
+        indexLock     sync.RWMutex
+        indexHTML     string
+        indexChecksum string
+}
+
+func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="7">{
+        var backend types.StorageBackend
+        var err error
+        switch cfg.Type </span>{
+        case "file":<span class="cov8" title="6">
+                backend, err = file.NewFileBackend(cfg.File)</span>
+        default:<span class="cov1" title="1">
+                return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)</span>
+        }
+        <span class="cov8" title="6">if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create storage backend: %w", err)
+        }</span>
+
+        <span class="cov8" title="6">s := &amp;Storage{
+                backend:  backend,
+                readonly: cfg.Readonly,
+        }
+
+        if !s.readonly </span><span class="cov4" title="2">{
+                s.readonly, err = s.backend.Readonly()
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
+                }</span>
+        }
+
+        <span class="cov8" title="6">err = s.updateIndexHTML()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to create index.html: %w", err)
+        }</span>
+
+        <span class="cov8" title="6">return s, nil</span>
+}
+
+type indexValues struct {
+        Readonly bool
+        Hosts    []types.Host
+}
+
+// Generate the index.html file from the template and the current hosts
+func (s *Storage) updateIndexHTML() error <span class="cov10" title="8">{
+        s.indexLock.Lock()
+        defer s.indexLock.Unlock()
+
+        hosts, err := s.backend.GetHosts()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get hosts: %w", err)
+        }</span>
+
+        <span class="cov10" title="8">values := indexValues{
+                Readonly: s.readonly,
+                Hosts:    hosts,
+        }
+
+        tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
+        }</span>
+
+        <span class="cov10" title="8">var buf bytes.Buffer
+        err = tmpl.Execute(&amp;buf, values)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to apply values to html template: %w", err)
+        }</span>
+        <span class="cov10" title="8">indexHTML := buf.String()
+
+        checksum := sha256.Sum256([]byte(indexHTML))
+
+        s.indexHTML = indexHTML
+        s.indexChecksum = hex.EncodeToString(checksum[:])
+
+        return nil</span>
+}
+
+// Return the current index.html and its checksum
+func (s *Storage) GetIndexHTML() (string, string) <span class="cov8" title="6">{
+        s.indexLock.RLock()
+        defer s.indexLock.RUnlock()
+
+        return s.indexHTML, s.indexChecksum
+}</span>
+
+// Return if the storage is readonly
+func (s *Storage) Readonly() bool <span class="cov7" title="4">{
+        return s.readonly
+}</span>
+
+// Add a new host and update the index.html
+func (s *Storage) AddHost(mac, host string) error <span class="cov4" title="2">{
+        if s.readonly </span><span class="cov1" title="1">{
+                return fmt.Errorf("storage is readonly")
+        }</span>
+
+        <span class="cov1" title="1">err := s.backend.AddHost(mac, host)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to add host: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">err = s.updateIndexHTML()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+
+// Remove a host and update the index.html
+func (s *Storage) RemoveHost(mac string) error <span class="cov4" title="2">{
+        if s.readonly </span><span class="cov1" title="1">{
+                return fmt.Errorf("storage is readonly")
+        }</span>
+
+        <span class="cov1" title="1">err := s.backend.RemoveHost(mac)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to remove host: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">err = s.updateIndexHTML()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package testsuite
+
+import (
+        "fmt"
+        "testing"
+
+        "github.com/stretchr/testify/assert"
+)
+
+// Runs basic tests for the storage backend.
+// It will create a new backend instance for each test case.
+func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span class="cov1" title="1">{
+        t.Run("AddHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                backend := factory(t, "add-host")
+
+                err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
+                assert.NoError(t, err, "AddHost failed")
+        }</span>)
+
+        <span class="cov1" title="1">t.Run("GetHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                backend := factory(t, "get-host")
+                addHosts(t, backend)
+
+                host, err := backend.GetHost(testHosts[0].MAC)
+                assert.NoError(t, err, "GetHost failed")
+                assert.Equal(t, testHosts[0].Name, host, "Failed to retrieve host")
+        }</span>)
+
+        <span class="cov1" title="1">t.Run("RemoveHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                tMatrix := []struct {
+                        name  string
+                        index int
+                }{
+                        {
+                                name:  "FirstElement",
+                                index: 0,
+                        },
+                        {
+                                name:  "LastElement",
+                                index: len(testHosts) - 1,
+                        },
+                        {
+                                name:  "MiddleElement",
+                                index: 1,
+                        },
+                }
+
+                for i, tCase := range tMatrix </span><span class="cov10" title="3">{
+                        t.Run(tCase.name, func(t *testing.T) </span><span class="cov10" title="3">{
+                                backend := factory(t, fmt.Sprintf("remove-host-%d", i))
+                                addHosts(t, backend)
+
+                                err := backend.RemoveHost(testHosts[tCase.index].MAC)
+                                assert.NoError(t, err, "RemoveHost failed")
+                                host, _ := backend.GetHost(testHosts[tCase.index].MAC)
+                                assert.Empty(t, host, "Expected empty host")
+                        }</span>)
+                }
+        })
+
+        <span class="cov1" title="1">t.Run("RemoveHostNonExistent", func(t *testing.T) </span><span class="cov1" title="1">{
+                backend := factory(t, "remove-host-non-existent")
+
+                err := backend.RemoveHost("00:11:22:33:44:55")
+                assert.NoError(t, err, "RemoveHost for non-existent host failed")
+        }</span>)
+
+        <span class="cov1" title="1">t.Run("GetHosts", func(t *testing.T) </span><span class="cov1" title="1">{
+                backend := factory(t, "get-hosts")
+                addHosts(t, backend)
+
+                hosts, err := backend.GetHosts()
+                assert.NoError(t, err, "GetHosts failed")
+                assert.Equal(t, testHosts, hosts, "Expected result to match testHosts")
+        }</span>)
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">//go:build race
+
+package testsuite
+
+import (
+        "fmt"
+        "sync"
+        "testing"
+)
+
+// These tests do not run any checks themselves, they rely on race detection for that.
+func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) <span class="cov1" title="1">{
+        t.Run("ConcurrentAddHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                var wg sync.WaitGroup
+                backend := factory(t, "concurrent-add-host")
+
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                        wg.Add(1)
+                        go func(i int) </span><span class="cov10" title="100">{
+                                defer wg.Done()
+
+                                mac := fmt.Sprintf("AA:BB:CC:DD:EE:%02X", i)
+                                host := fmt.Sprintf("TestHost%d", i)
+                                _ = backend.AddHost(mac, host)
+                        }</span>(i)
+                }
+                <span class="cov1" title="1">wg.Wait()</span>
+        })
+
+        <span class="cov1" title="1">t.Run("ConcurrentGetHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                var wg sync.WaitGroup
+                backend := factory(t, "concurrent-get-host")
+                addHosts(t, backend)
+
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                        wg.Add(1)
+                        go func() </span><span class="cov10" title="100">{
+                                defer wg.Done()
+
+                                _, _ = backend.GetHost(testHosts[0].MAC)
+                        }</span>()
+                }
+                <span class="cov1" title="1">wg.Wait()</span>
+        })
+
+        <span class="cov1" title="1">t.Run("ConcurrentRemoveHost", func(t *testing.T) </span><span class="cov1" title="1">{
+                var wg sync.WaitGroup
+                backend := factory(t, "concurrent-remove-host")
+                addHosts(t, backend)
+
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                        wg.Add(1)
+                        go func() </span><span class="cov10" title="100">{
+                                defer wg.Done()
+
+                                _ = backend.RemoveHost(testHosts[0].MAC)
+                        }</span>()
+                }
+                <span class="cov1" title="1">wg.Wait()</span>
+        })
+
+        <span class="cov1" title="1">t.Run("ConcurrentGetHosts", func(t *testing.T) </span><span class="cov1" title="1">{
+                var wg sync.WaitGroup
+                backend := factory(t, "concurrent-get-hosts")
+                addHosts(t, backend)
+
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                        wg.Add(1)
+                        go func() </span><span class="cov10" title="100">{
+                                defer wg.Done()
+
+                                _, _ = backend.GetHosts()
+                        }</span>()
+                }
+                <span class="cov1" title="1">wg.Wait()</span>
+        })
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package testsuite
+
+import (
+        "testing"
+
+        "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "github.com/stretchr/testify/assert"
+)
+
+type StorageBackendFactory func(t *testing.T, name string) types.StorageBackend
+
+var testHosts = []types.Host{
+        {
+                MAC:  "AA:BB:CC:DD:EE:FF",
+                Name: "TestHost1",
+        },
+        {
+                MAC:  "11:22:33:44:55:66",
+                Name: "TestHost2",
+        },
+        {
+                MAC:  "77:88:99:AA:BB:CC",
+                Name: "TestHost3",
+        },
+        {
+                MAC:  "FF:88:99:AA:BB:CC",
+                Name: "TestHost4",
+        },
+        {
+                MAC:  "FE:11:99:AA:BB:CC",
+                Name: "TestHost5",
+        },
+}
+
+func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" title="8">{
+        t.Helper()
+
+        for _, host := range testHosts </span><span class="cov10" title="40">{
+                err := backend.AddHost(host.MAC, host.Name)
+                if !assert.NoError(t, err, "AddHost failed for %s", host.Name) </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package version
 
 import (
         "runtime"
@@ -627,7 +1187,7 @@ func VersionInfoString() string <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package wol
+		<pre class="file" id="file16" style="display: none">package wol
 
 import (
         "fmt"
@@ -680,7 +1240,7 @@ func exitError(cmd *cobra.Command, err error) <span class="cov5" title="3">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package wol
+		<pre class="file" id="file17" style="display: none">package wol
 
 import (
         "encoding/binary"
