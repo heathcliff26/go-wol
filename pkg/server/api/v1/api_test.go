@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAPI(t *testing.T) {
+func TestWakeHandler(t *testing.T) {
 	tMatrix := []struct {
 		Name, MAC string
 		Status    int
@@ -39,7 +39,7 @@ func TestAPI(t *testing.T) {
 			assert := assert.New(t)
 
 			mux := http.NewServeMux()
-			mux.HandleFunc("GET /api/{macAddr}", API)
+			mux.HandleFunc("GET /api/{macAddr}", WakeHandler)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/"+tCase.MAC, nil)
 			rr := httptest.NewRecorder()
