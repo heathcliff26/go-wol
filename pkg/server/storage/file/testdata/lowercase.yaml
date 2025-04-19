@@ -1,0 +1,6 @@
+---
+hosts:
+  - name: TestHost1
+    mac: aa:bb:cc:dd:ee:ff
+  - name: TestHost2
+    mac: 11:22:33:44:55:66
