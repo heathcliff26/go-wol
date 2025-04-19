@@ -59,7 +59,7 @@ func (s *Server) Run() error {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.indexHandler)
 	router.HandleFunc("GET /index.html", s.indexHandler)
-	router.Handle("/api/v1/", http.StripPrefix("/api/v1", api.NewRouter()))
+	router.Handle("/api/v1/", http.StripPrefix("/api/v1", api.NewRouter(s.storage)))
 	router.Handle("GET /css/", assetFS)
 	router.Handle("GET /icons/", assetFS)
 	router.Handle("GET /js/", assetFS)

@@ -29,13 +29,8 @@ async function addHost() {
     const macAddr = document.getElementById('macAddress').value;
 
     try {
-        const response = await fetch('/api/v1/hosts', {
-            // TODO: Make this PUT and encode mac and name in url instead of body
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, macAddr }),
+        const response = await fetch('/api/v1/hosts/'+macAddr+"/"+name, {
+            method: 'PUT',
         });
 
         const responseBody = await response.json();
