@@ -803,6 +803,10 @@ button:not(:disabled),
   border-bottom-left-radius: var(--bs-card-inner-border-radius);
 }
 
+.card > .list-group + .card-footer {
+  border-top: 0;
+}
+
 .card-body {
   flex: 1 1 auto;
   padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
@@ -812,6 +816,16 @@ button:not(:disabled),
 .card-title {
   margin-bottom: var(--bs-card-title-spacer-y);
   color: var(--bs-card-title-color);
+}
+
+.card-footer {
+  padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
+  color: var(--bs-card-cap-color);
+  background-color: var(--bs-card-cap-bg);
+  border-top: var(--bs-card-border-width) solid var(--bs-card-border-color);
+}
+.card-footer:last-child {
+  border-radius: 0 0 var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius);
 }
 
 .alert {
@@ -1196,6 +1210,11 @@ button:not(:disabled),
 /* rtl:begin:remove */
 
 /* rtl:end:remove */
+
+.text-muted {
+  --bs-text-opacity: 1;
+  color: var(--bs-secondary-color) !important;
+}
 @media (min-width: 1200px) {
   .fs-4 {
     font-size: 1.5rem !important;

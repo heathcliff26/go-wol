@@ -10,6 +10,7 @@ import (
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
+	"github.com/heathcliff26/go-wol/pkg/version"
 	"github.com/heathcliff26/go-wol/pkg/wol"
 	"github.com/heathcliff26/go-wol/static"
 )
@@ -59,6 +60,8 @@ func NewStorage(cfg StorageConfig) (*Storage, error) {
 type indexValues struct {
 	Readonly bool
 	Hosts    []types.Host
+	Version  string
+	Name     string
 }
 
 // Generate the index.html file from the template and the current hosts
@@ -74,6 +77,8 @@ func (s *Storage) updateIndexHTML() error {
 	values := indexValues{
 		Readonly: s.readonly,
 		Hosts:    hosts,
+		Version:  version.Version(),
+		Name:     version.Name,
 	}
 
 	tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
