@@ -1,7 +1,8 @@
 ---
 logLevel: "error"
-port: 5678
-ssl:
-  enabled: true
-  key: "test.key"
-  cert: "test.crt"
+server:
+  port: 5678
+  ssl:
+    enabled: true
+    key: "test.key"
+    cert: "test.crt"

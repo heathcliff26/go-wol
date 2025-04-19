@@ -1,5 +1,6 @@
 ---
-ssl:
-  enabled: true
-  cert: "server.crt"
-  key: ""
+server:
+  ssl:
+    enabled: true
+    cert: "server.crt"
+    key: ""

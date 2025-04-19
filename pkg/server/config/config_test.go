@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +24,10 @@ func TestValidConfigs(t *testing.T) {
 			Path: "testdata/valid-config-1.yaml",
 			Result: Config{
 				LogLevel: "debug",
-				Port:     1234,
+				Server: ServerConfig{
+					Port: 1234,
+				},
+				Storage: storage.NewDefaultStorageConfig(),
 			},
 		},
 		{
@@ -31,12 +35,15 @@ func TestValidConfigs(t *testing.T) {
 			Path: "testdata/valid-config-2.yaml",
 			Result: Config{
 				LogLevel: "error",
-				Port:     5678,
-				SSL: SSLConfig{
-					Enabled: true,
-					Key:     "test.key",
-					Cert:    "test.crt",
+				Server: ServerConfig{
+					Port: 5678,
+					SSL: SSLConfig{
+						Enabled: true,
+						Key:     "test.key",
+						Cert:    "test.crt",
+					},
 				},
+				Storage: storage.NewDefaultStorageConfig(),
 			},
 		},
 	}
@@ -84,11 +91,6 @@ func TestInvalidConfig(t *testing.T) {
 			Path:  "testdata/invalid-config-ssl-2.yaml",
 			Error: "config.ErrIncompleteSSLConfig",
 		},
-		{
-			Name:  "HostWithEmptyMAC",
-			Path:  "testdata/invalid-config-mac.yaml",
-			Error: "config.ErrMissingMAC",
-		},
 	}
 
 	for _, tCase := range tMatrix {
@@ -116,7 +118,10 @@ func TestEnvSubstitution(t *testing.T) {
 			Env:  true,
 			Config: Config{
 				LogLevel: "debug",
-				Port:     1234,
+				Server: ServerConfig{
+					Port: 1234,
+				},
+				Storage: storage.NewDefaultStorageConfig(),
 			},
 		},
 		{

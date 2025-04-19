@@ -1,0 +1,4 @@
+---
+hosts:
+  - mac: TESTMAC
+    name: testName

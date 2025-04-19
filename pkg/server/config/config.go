@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"sigs.k8s.io/yaml"
 )
 
@@ -29,10 +30,14 @@ func init() {
 }
 
 type Config struct {
-	LogLevel string    `json:"logLevel,omitempty"`
-	Port     int       `json:"port,omitempty"`
-	SSL      SSLConfig `json:"ssl,omitempty"`
-	Hosts    []Host    `json:"hosts,omitempty"`
+	LogLevel string                `json:"logLevel,omitempty"`
+	Server   ServerConfig          `json:"server,omitempty"`
+	Storage  storage.StorageConfig `json:"storage,omitempty"`
+}
+
+type ServerConfig struct {
+	Port int       `json:"port,omitempty"`
+	SSL  SSLConfig `json:"ssl,omitempty"`
 }
 
 type SSLConfig struct {
@@ -41,16 +46,14 @@ type SSLConfig struct {
 	Key     string `json:"key,omitempty"`
 }
 
-type Host struct {
-	Name string `json:"name"`
-	MAC  string `json:"mac"`
-}
-
 // Returns a Config with default values set
 func DefaultConfig() Config {
 	return Config{
 		LogLevel: DEFAULT_LOG_LEVEL,
-		Port:     DEFAULT_SERVER_PORT,
+		Server: ServerConfig{
+			Port: DEFAULT_SERVER_PORT,
+		},
+		Storage: storage.NewDefaultStorageConfig(),
 	}
 }
 
@@ -87,14 +90,8 @@ func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) 
 		return Config{}, err
 	}
 
-	if c.SSL.Enabled && (c.SSL.Cert == "" || c.SSL.Key == "") {
+	if c.Server.SSL.Enabled && (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") {
 		return Config{}, ErrIncompleteSSLConfig{}
-	}
-
-	for _, host := range c.Hosts {
-		if host.MAC == "" {
-			return Config{}, ErrMissingMAC{}
-		}
 	}
 
 	return c, nil

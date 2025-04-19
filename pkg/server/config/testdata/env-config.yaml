@@ -1,3 +1,4 @@
 ---
 logLevel: "${GOWOL_LOG_LEVEL}"
-port: ${GOWOL_PORT}
+server:
+  port: ${GOWOL_PORT}
