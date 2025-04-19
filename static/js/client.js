@@ -28,6 +28,7 @@ async function addHost() {
     const name = document.getElementById('hostName').value;
     const macAddr = document.getElementById('macAddress').value;
 
+    modal.hide();
     try {
         const response = await fetch('/api/v1/hosts/'+macAddr+"/"+name, {
             method: 'PUT',
@@ -37,7 +38,6 @@ async function addHost() {
 
         if (response.ok) {
             appendAlert(`Added host ${name}`);
-            modal.hide();
             location.reload();
         } else {
             appendAlert(`Failed to add host: ${responseBody.reason}`, "warning");

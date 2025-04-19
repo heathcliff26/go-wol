@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="icon" type="image/x-icon" href="/icons/favicon.svg">
-    {{if not $.Readonly}}<script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>{{end}}
+    {{if not $.Readonly}}
+    <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+    {{end}}
     <script type="text/javascript" src="/js/client.js"></script>
     <script type="text/javascript" src="/js/theme.js"></script>
     <script type="text/javascript" src="/js/utils.js"></script>
@@ -23,13 +25,6 @@
                 <div class="card shadow-lg">
                     <h2 class="card-title mb-0 mt-2">Your Devices</h2>
                     <div class="card-body">
-                        {{if not $.Readonly}}
-                        <button type="button" class="btn btn-success mb-3" onclick="showAddHostModal();">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
-                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z" />
-                            </svg> Add Host
-                        </button>
-                        {{end}}
                         <ul class="list-group">
                             {{range $.Hosts}}
                             <li class="list-group-item shadow">
@@ -69,6 +64,15 @@
                             </li>
                         </ul>
                     </div>
+                    {{if not $.Readonly}}
+                    <div class="container">
+                        <button type="button" class="btn btn-success mb-3" onclick="showAddHostModal();">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
+                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z" />
+                            </svg> Add Host
+                        </button>
+                    </div>
+                    {{end}}
                 </div>
             </div>
 
