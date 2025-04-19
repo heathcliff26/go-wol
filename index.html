@@ -843,6 +843,7 @@ import (
 
         "github.com/heathcliff26/go-wol/pkg/server/storage/file"
         "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "github.com/heathcliff26/go-wol/pkg/version"
         "github.com/heathcliff26/go-wol/pkg/wol"
         "github.com/heathcliff26/go-wol/static"
 )
@@ -892,6 +893,8 @@ func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="1
 type indexValues struct {
         Readonly bool
         Hosts    []types.Host
+        Version  string
+        Name     string
 }
 
 // Generate the index.html file from the template and the current hosts
@@ -907,6 +910,8 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="13">{
         <span class="cov10" title="13">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
+                Version:  version.Version(),
+                Name:     version.Name,
         }
 
         tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
@@ -1216,7 +1221,7 @@ func NewCommand() *cobra.Command <span class="cov4" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="13">{
+func Version() string <span class="cov10" title="26">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
@@ -1225,7 +1230,7 @@ func Version() string <span class="cov10" title="13">{
 func VersionInfoString() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
-        for _, item := range buildinfo.Settings </span><span class="cov9" title="12">{
+        for _, item := range buildinfo.Settings </span><span class="cov7" title="12">{
                 if item.Key == "vcs.revision" </span><span class="cov0" title="0">{
                         commit = item.Value
                         break</span>
