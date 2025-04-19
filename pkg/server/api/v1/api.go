@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"encoding/json"
@@ -13,7 +13,15 @@ type Response struct {
 	Reason string `json:"reason"`
 }
 
-func API(res http.ResponseWriter, req *http.Request) {
+func NewRouter() *http.ServeMux {
+	router := http.NewServeMux()
+	router.HandleFunc("GET /wake/{macAddr}", WakeHandler)
+	return router
+}
+
+// /wake/{macAddr}
+// Send a magic packet to the specified MAC address
+func WakeHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 
 	packet, err := wol.CreatePacket(macAddr)
@@ -50,6 +58,8 @@ func sendResponse(rw http.ResponseWriter, reason string) {
 		slog.Error("Failed to create Response", "err", err)
 		return
 	}
+
+	rw.Header().Set("Content-Type", "application/json")
 
 	_, err = rw.Write(b)
 	if err != nil {

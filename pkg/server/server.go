@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/heathcliff26/go-wol/pkg/server/api"
+	api "github.com/heathcliff26/go-wol/pkg/server/api/v1"
 	"github.com/heathcliff26/go-wol/pkg/server/config"
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/static"
@@ -59,7 +59,7 @@ func (s *Server) Run() error {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /{$}", s.indexHandler)
 	router.HandleFunc("GET /index.html", s.indexHandler)
-	router.HandleFunc("GET /api/{macAddr}", api.API)
+	router.Handle("/api/v1/", http.StripPrefix("/api/v1", api.NewRouter()))
 	router.Handle("GET /css/", assetFS)
 	router.Handle("GET /icons/", assetFS)
 	router.Handle("GET /js/", assetFS)

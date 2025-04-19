@@ -124,7 +124,7 @@ func TestServer(t *testing.T) {
 	t.Run("API", func(t *testing.T) {
 		assert := assert.New(t)
 
-		res, err := http.Get(address + "/api/not-a-mac")
+		res, err := http.Get(address + "/api/v1/wake/not-a-mac")
 		t.Cleanup(func() {
 			res.Body.Close()
 		})

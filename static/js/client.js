@@ -4,7 +4,7 @@ async function wake(macAddr, name = "") {
     const displayName = name != "" ? name + " (" + macAddr + ")" : macAddr
 
     try {
-        const response = await fetch("/api/" + macAddr);
+        const response = await fetch("/api/v1/wake/" + macAddr);
 
         const responseBody = await response.json();
 
@@ -29,7 +29,7 @@ async function addHost() {
     const macAddr = document.getElementById('macAddress').value;
 
     try {
-        const response = await fetch('/api/hosts', {
+        const response = await fetch('/api/v1/hosts', {
             // TODO: Make this PUT and encode mac and name in url instead of body
             method: 'POST',
             headers: {
@@ -59,7 +59,7 @@ async function deleteHost(macAddr, name) {
     }
 
     try {
-        const response = await fetch(`/api/hosts/${macAddr}`, {
+        const response = await fetch(`/api/v1/hosts/${macAddr}`, {
             method: 'DELETE',
         });
 
