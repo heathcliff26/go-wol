@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/heathcliff26/go-wol/pkg/server/config"
@@ -52,12 +51,6 @@ func run(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO: Remove when api functions have been implemented
-	if !cfg.Storage.Readonly {
-		slog.Warn("Writing to storage is not yet supported, ignoring setting")
-	}
-	cfg.Storage.Readonly = true
 
 	server, err := NewServer(cfg.Server, cfg.Storage)
 	if err != nil {

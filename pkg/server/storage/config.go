@@ -3,14 +3,13 @@ package storage
 import "github.com/heathcliff26/go-wol/pkg/server/storage/file"
 
 const (
-	// TODO: Make default true when implementing api
-	DEFAULT_READONLY     = true
+	DEFAULT_READONLY     = false
 	DEFAULT_BACKEND_TYPE = "file"
 )
 
 type StorageConfig struct {
 	Type     string                 `json:"type"`
-	Readonly bool                   `json:"-,omitempty"`
+	Readonly bool                   `json:"readonly,omitempty"`
 	File     file.FileBackendConfig `json:"file,omitempty"`
 }
 
