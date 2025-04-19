@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="icon" type="image/x-icon" href="/icons/favicon.svg">
-    {{if false}}<script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>{{end}}
+    {{if not $.Readonly}}<script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>{{end}}
     <script type="text/javascript" src="/js/client.js"></script>
     <script type="text/javascript" src="/js/theme.js"></script>
     <script type="text/javascript" src="/js/utils.js"></script>
@@ -23,7 +23,7 @@
                 <div class="card shadow-lg">
                     <h2 class="card-title mb-0 mt-2">Your Devices</h2>
                     <div class="card-body">
-                        {{if false}}
+                        {{if not $.Readonly}}
                         <button type="button" class="btn btn-success mb-3" onclick="showAddHostModal();">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle-fill" viewBox="0 0 16 16">
                                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3z" />
@@ -31,7 +31,7 @@
                         </button>
                         {{end}}
                         <ul class="list-group">
-                            {{range .}}
+                            {{range $.Hosts}}
                             <li class="list-group-item shadow">
                                 <div class="row">
                                     <div class="col-md-6">
@@ -45,7 +45,7 @@
                                     <div class="col">
                                         <button type="button" class="btn btn-primary w-100" onclick="wake('{{.MAC}}', '{{.Name}}');">Wake</button>
                                     </div>
-                                    {{if false}}
+                                    {{if not $.Readonly}}
                                     <div class="col-auto">
                                         <button type="button" class="btn btn-danger w-100" onclick="deleteHost('{{.MAC}}', '{{.Name}}');">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
@@ -76,7 +76,7 @@
         </div>
     </div>
 
-    {{if false}}
+    {{if not $.Readonly}}
     <!-- Add Host Modal -->
     <div class="modal fade" id="addHostModal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">

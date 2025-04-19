@@ -1,11 +1,8 @@
 package server
 
 import (
-	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"html/template"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -13,52 +10,43 @@ import (
 
 	"github.com/heathcliff26/go-wol/pkg/server/api"
 	"github.com/heathcliff26/go-wol/pkg/server/config"
+	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/static"
 	"github.com/heathcliff26/simple-fileserver/pkg/middleware"
 )
 
 type Server struct {
-	addr          string
-	ssl           config.SSLConfig
-	indexHTML     string
-	indexChecksum string
+	addr    string
+	ssl     config.SSLConfig
+	storage *storage.Storage
 }
 
-func NewServer(c config.Config) (*Server, error) {
-	tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
+func NewServer(cfgServer config.ServerConfig, cfgStorage storage.StorageConfig) (*Server, error) {
+	storage, err := storage.NewStorage(cfgStorage)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create storage: %w", err)
 	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, c.Hosts)
-	if err != nil {
-		return nil, err
-	}
-	indexHTML := buf.String()
-
-	checksum := sha256.Sum256([]byte(indexHTML))
 
 	return &Server{
-		addr:          ":" + strconv.Itoa(c.Port),
-		ssl:           c.SSL,
-		indexHTML:     indexHTML,
-		indexChecksum: hex.EncodeToString(checksum[:]),
+		addr:    ":" + strconv.Itoa(cfgServer.Port),
+		ssl:     cfgServer.SSL,
+		storage: storage,
 	}, nil
 }
 
 func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("ETag", s.indexChecksum)
+	indexHTML, indexChecksum := s.storage.GetIndexHTML()
+	res.Header().Set("ETag", indexChecksum)
 	res.Header().Set("Cache-Control", "public, max-age=300")
 
 	if match := req.Header.Get("If-None-Match"); match != "" {
-		if strings.Contains(match, s.indexChecksum) {
+		if strings.Contains(match, indexChecksum) {
 			res.WriteHeader(http.StatusNotModified)
 			return
 		}
 	}
 
-	count, err := res.Write([]byte(s.indexHTML))
+	count, err := res.Write([]byte(indexHTML))
 	if err != nil {
 		slog.Error("Failed to write index.html to client", "err", err, slog.Int("written", count))
 	}

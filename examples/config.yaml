@@ -7,13 +7,30 @@
 #   - error
 logLevel: info
 
-# The port where the server will listen on
-port: 8080
+# The webserver configuration
+server:
+  # The port where the server will listen on
+  port: 8080
+  # (Optional) Configure SSL
+  ssl:
+    # If the SSL is enabled
+    enabled: false
+    # The path to the certificate file
+    cert: ""
+    # The path to the key file
+    key: ""
 
-# The list of hosts
-hosts:
-  - name: michael
-    mac: 12:34:56:78:9a:bc
-  - name: myers
-    mac: de:f0:ff:ff:ff:ff
-
+# Configure where the data will be stored
+storage:
+  # The backend to use for storage.
+  #
+  # Accepted options are:
+  #   - file
+  type: "file"
+  # If the storage should be readonly.
+  # If set to false, will check if the backend is writable on startup
+  readonly: true
+  # The configuration for the file backend
+  file:
+    # The path to the hosts file. Will be created if it does not exist
+    path: "hosts.yaml"

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/heathcliff26/go-wol/pkg/server/config"
+	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/static"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,72 +14,62 @@ import (
 func TestNewServer(t *testing.T) {
 	assert := assert.New(t)
 
-	c := config.Config{
+	cfgServer := config.ServerConfig{
 		Port: 8080,
 		SSL: config.SSLConfig{
 			Enabled: true,
 			Cert:    "test.crt",
 			Key:     "test.key",
 		},
-		Hosts: []config.Host{
-			{
-				Name: "testName",
-				MAC:  "testMAC",
-			},
-		},
 	}
+	cfgStorage := storage.NewDefaultStorageConfig()
+	cfgStorage.File.Path = "testdata/hosts.yaml"
 
-	s, err := NewServer(c)
+	s, err := NewServer(cfgServer, cfgStorage)
 
 	if !assert.NoError(err, "Should create new server") || !assert.NotNil(s, "Server should not be empty") {
 		t.FailNow()
 	}
 
-	assert.Equal(":8080", s.addr, "Server should have address set")
-	assert.Equal(c.SSL, s.ssl, "Server should have SSL Config")
+	indexHTML, indexChecksum := s.storage.GetIndexHTML()
 
-	assert.Contains(s.indexHTML, "testName", "Should add hostname to index.html")
-	assert.Contains(s.indexHTML, "testMAC", "Should add MAC to index.html")
-	assert.Contains(s.indexHTML, "onclick=\"wake('testMAC', 'testName');\"", "Should add onClick javascript function call with MAC")
-	assert.NotEmpty(s.indexChecksum, "Server should have checksum of index.html")
+	assert.Equal(":8080", s.addr, "Server should have address set")
+	assert.Equal(cfgServer.SSL, s.ssl, "Server should have SSL Config")
+
+	assert.Contains(indexHTML, "testName", "Should add hostname to index.html")
+	assert.Contains(indexHTML, "TESTMAC", "Should add MAC to index.html")
+	assert.Contains(indexHTML, "onclick=\"wake('TESTMAC', 'testName');\"", "Should add onClick javascript function call with MAC")
+	assert.NotEmpty(indexChecksum, "Server should have checksum of index.html")
 }
 
 func TestServer(t *testing.T) {
 	t.Run("SSL", func(t *testing.T) {
 		assert := assert.New(t)
 
-		c := config.Config{
+		cfgServer := config.ServerConfig{
 			Port: 8080,
 			SSL: config.SSLConfig{
 				Enabled: true,
 				Cert:    "test.crt",
 				Key:     "test.key",
 			},
-			Hosts: []config.Host{
-				{
-					Name: "testName",
-					MAC:  "testMAC",
-				},
-			},
 		}
+		cfgStorage := storage.NewDefaultStorageConfig()
+		cfgStorage.File.Path = "testdata/hosts.yaml"
 
-		s, err := NewServer(c)
+		s, err := NewServer(cfgServer, cfgStorage)
 		if !assert.NoError(err, "Should create server without error") {
 			t.FailNow()
 		}
 
 		assert.Error(s.Run(), "Server should fail to run, as the ssl certificate and key do not exist")
 	})
-	c := config.Config{
+	cfgServer := config.ServerConfig{
 		Port: 8080,
-		Hosts: []config.Host{
-			{
-				Name: "testName",
-				MAC:  "testMAC",
-			},
-		},
 	}
-	s, err := NewServer(c)
+	cfgStorage := storage.NewDefaultStorageConfig()
+	cfgStorage.File.Path = "testdata/hosts.yaml"
+	s, err := NewServer(cfgServer, cfgStorage)
 	if !assert.NoError(t, err, "Should create server without error") {
 		t.FailNow()
 	}
@@ -95,6 +86,8 @@ func TestServer(t *testing.T) {
 	t.Run("IndexHandler", func(t *testing.T) {
 		assert := assert.New(t)
 
+		indexHTML, indexChecksum := s.storage.GetIndexHTML()
+
 		for _, path := range []string{"/", "/index.html"} {
 			res, err := http.Get(address + path)
 			t.Cleanup(func() {
@@ -103,12 +96,12 @@ func TestServer(t *testing.T) {
 
 			assert.NoErrorf(err, "Should not return error for request to %s", path)
 			assert.Equal(http.StatusOK, res.StatusCode, "Should return 200 for request to %s", path)
-			assert.Equalf(s.indexChecksum, res.Header.Get("ETag"), "Should have ETag set on request to %s", path)
+			assert.Equalf(indexChecksum, res.Header.Get("ETag"), "Should have ETag set on request to %s", path)
 			assert.NotEmptyf(res.Header.Get("Cache-Control"), "Should have Cache-Control header set on request to %s", path)
 
 			body, err := io.ReadAll(res.Body)
 			assert.NoErrorf(err, "Should read body without error for request to %s", path)
-			assert.Equalf(s.indexHTML, string(body), "Body should match index.html on path %s", path)
+			assert.Equalf(indexHTML, string(body), "Body should match index.html on path %s", path)
 		}
 
 		resNotFound, err := http.Get(address + "/something")
@@ -119,7 +112,7 @@ func TestServer(t *testing.T) {
 		assert.Equal(http.StatusNotFound, resNotFound.StatusCode, "Should return 404 for random path")
 
 		req, _ := http.NewRequest(http.MethodGet, address+"/", nil)
-		req.Header.Add("If-None-Match", s.indexChecksum)
+		req.Header.Add("If-None-Match", indexChecksum)
 
 		resCache, err := (&http.Client{}).Do(req)
 		t.Cleanup(func() {

@@ -1,0 +1,7 @@
+hosts:
+  # Single hosts contain both a name and a MAC address.
+  # They are in the same order as they will be displayed in the UI.
+  - name: laptop # Freely chosen name
+    mac: AA:BB:CC:DD:EE:FF  # Replace with the actual MAC address
+  - name: server # Freely chosen name
+    mac: 11:22:33:44:55:66  # Replace with the actual MAC address

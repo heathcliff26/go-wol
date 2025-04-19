@@ -2,7 +2,8 @@
 /bin
 
 # Ignore files created for testing
-test-config.yaml
+/test-*.yaml
+/hosts.yaml
 
 # Generated go-test coverage reports
 coverprofiles/

@@ -13,9 +13,3 @@ type ErrIncompleteSSLConfig struct{}
 func (e ErrIncompleteSSLConfig) Error() string {
 	return "SSL is enabled but certificate and/or private key are missing"
 }
-
-type ErrMissingMAC struct{}
-
-func (e ErrMissingMAC) Error() string {
-	return "At least one host has a missing mac address."
-}
