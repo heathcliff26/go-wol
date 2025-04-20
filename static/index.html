@@ -74,7 +74,11 @@
                     </div>
                     {{end}}
                     <div class="card-footer text-muted">
-                        <p class="text-muted">{{.Name}} - {{.Version}}</p>
+                        <p class="text-muted d-flex justify-content-between">
+                            <span>{{.Name}}</span>
+                            <span class="mx-2">-</span>
+                            <span>{{.Version}}</span>
+                        </p>
                     </div>
                 </div>
             </div>

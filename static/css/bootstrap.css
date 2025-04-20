@@ -1155,6 +1155,10 @@ button:not(:disabled),
   }
 }
 
+.d-flex {
+  display: flex !important;
+}
+
 .shadow {
   box-shadow: var(--bs-box-shadow) !important;
 }
@@ -1169,6 +1173,15 @@ button:not(:disabled),
 
 .justify-content-center {
   justify-content: center !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.mx-2 {
+  margin-right: 0.5rem !important;
+  margin-left: 0.5rem !important;
 }
 
 .mt-2 {
