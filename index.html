@@ -396,7 +396,7 @@ type SSLConfig struct {
 }
 
 // Returns a Config with default values set
-func DefaultConfig() Config <span class="cov8" title="13">{
+func DefaultConfig() Config <span class="cov9" title="15">{
         return Config{
                 LogLevel: DEFAULT_LOG_LEVEL,
                 Server: ServerConfig{
@@ -407,8 +407,8 @@ func DefaultConfig() Config <span class="cov8" title="13">{
 }</span>
 
 // Return the path to the cobfig file
-func getPath(path string) string <span class="cov9" title="15">{
-        if path != "" </span><span class="cov8" title="12">{
+func getPath(path string) string <span class="cov9" title="17">{
+        if path != "" </span><span class="cov8" title="14">{
                 return path
         }</span>
         <span class="cov4" title="3">if _, ok := os.LookupEnv("container"); ok </span><span class="cov1" title="1">{
@@ -424,29 +424,29 @@ func getPath(path string) string <span class="cov9" title="15">{
 //                path: Path to config file, if empty will use either DEFAULT_CONFIG_PATH or DEFAULT_CONFIG_PATH_CONTAINER
 //                env: Determines if enviroment variables in the file will be expanded before decoding
 //         logLevelOverride: Override the log level given by the config
-func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="12">{
+func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="14">{
         c, err := loadConfigFile(path, env)
         if err != nil </span><span class="cov4" title="3">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="9">if logLevelOverride == "" </span><span class="cov7" title="8">{
+        <span class="cov8" title="11">if logLevelOverride == "" </span><span class="cov7" title="10">{
                 err = setLogLevel(c.LogLevel)
         }</span> else<span class="cov1" title="1"> {
                 err = setLogLevel(logLevelOverride)
         }</span>
-        <span class="cov7" title="9">if err != nil </span><span class="cov1" title="1">{
+        <span class="cov8" title="11">if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="8">if c.Server.SSL.Enabled &amp;&amp; (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") </span><span class="cov3" title="2">{
+        <span class="cov7" title="10">if c.Server.SSL.Enabled &amp;&amp; (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") </span><span class="cov3" title="2">{
                 return Config{}, ErrIncompleteSSLConfig{}
         }</span>
 
-        <span class="cov6" title="6">return c, nil</span>
+        <span class="cov7" title="8">return c, nil</span>
 }
 
-func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="12">{
+func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" title="14">{
         c := DefaultConfig()
 
         p := getPath(path)
@@ -455,37 +455,37 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" ti
         if path == "" &amp;&amp; os.IsNotExist(err) </span><span class="cov1" title="1">{
                 slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
                 return c, nil
-        }</span> else<span class="cov8" title="11"> if err != nil </span><span class="cov1" title="1">{
+        }</span> else<span class="cov8" title="13"> if err != nil </span><span class="cov1" title="1">{
                 return Config{}, err
         }</span>
 
-        <span class="cov8" title="10">if env </span><span class="cov1" title="1">{
+        <span class="cov8" title="12">if env </span><span class="cov1" title="1">{
                 f = []byte(os.ExpandEnv(string(f)))
         }</span>
 
-        <span class="cov8" title="10">err = yaml.Unmarshal(f, &amp;c)
+        <span class="cov8" title="12">err = yaml.Unmarshal(f, &amp;c)
         if err != nil </span><span class="cov3" title="2">{
                 return Config{}, err
         }</span>
 
-        <span class="cov7" title="8">return c, nil</span>
+        <span class="cov7" title="10">return c, nil</span>
 }
 
 // Parse a given string and set the resulting log level
-func setLogLevel(level string) error <span class="cov10" title="19">{
+func setLogLevel(level string) error <span class="cov10" title="21">{
         switch strings.ToLower(level) </span>{
         case "debug":<span class="cov5" title="5">
                 logLevel.Set(slog.LevelDebug)</span>
-        case "info":<span class="cov6" title="6">
+        case "info":<span class="cov6" title="7">
                 logLevel.Set(slog.LevelInfo)</span>
-        case "warn":<span class="cov4" title="3">
+        case "warn":<span class="cov5" title="4">
                 logLevel.Set(slog.LevelWarn)</span>
         case "error":<span class="cov4" title="3">
                 logLevel.Set(slog.LevelError)</span>
         default:<span class="cov3" title="2">
                 return &amp;ErrUnknownLogLevel{level}</span>
         }
-        <span class="cov9" title="17">return nil</span>
+        <span class="cov9" title="19">return nil</span>
 }
 </pre>
 		
@@ -645,7 +645,7 @@ type StorageConfig struct {
         Valkey   valkey.ValkeyConfig    `json:"valkey,omitempty"`
 }
 
-func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="19">{
+func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="21">{
         return StorageConfig{
                 Type:     DEFAULT_BACKEND_TYPE,
                 Readonly: DEFAULT_READONLY,
@@ -664,7 +664,7 @@ type FileBackendConfig struct {
         Path string `json:"path,omitempty"`
 }
 
-func NewDefaultFileBackendConfig() FileBackendConfig <span class="cov10" title="19">{
+func NewDefaultFileBackendConfig() FileBackendConfig <span class="cov10" title="22">{
         return FileBackendConfig{
                 Path: DEFAULT_FILE_PATH,
         }
