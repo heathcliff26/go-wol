@@ -1,0 +1,13 @@
+---
+logLevel: info
+storage:
+  type: valkey
+  valkey:
+    addresses:
+      - localhost:6379
+    username: user
+    password: pass
+    db: 1
+    tls: true
+    sentinel: true
+    master: "none"

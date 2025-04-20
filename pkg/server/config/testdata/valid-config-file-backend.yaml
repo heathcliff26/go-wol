@@ -1,0 +1,9 @@
+---
+logLevel: warn
+server:
+  port: 8080
+storage:
+  type: file
+  readonly: true
+  file:
+    path: /data/storage
