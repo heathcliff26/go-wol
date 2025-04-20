@@ -1,10 +1,7 @@
 package file
 
-import "os"
-
 const (
-	DEFAULT_FILE_PATH           = "hosts.yaml"
-	DEFAULT_FILE_PATH_CONTAINER = "/data/hosts.yaml"
+	DEFAULT_FILE_PATH = "hosts.yaml"
 )
 
 type FileBackendConfig struct {
@@ -12,11 +9,7 @@ type FileBackendConfig struct {
 }
 
 func NewDefaultFileBackendConfig() FileBackendConfig {
-	cfg := FileBackendConfig{
+	return FileBackendConfig{
 		Path: DEFAULT_FILE_PATH,
 	}
-	if _, ok := os.LookupEnv("container"); ok {
-		cfg.Path = DEFAULT_FILE_PATH_CONTAINER
-	}
-	return cfg
 }
