@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,6 +46,46 @@ func TestValidConfigs(t *testing.T) {
 					},
 				},
 				Storage: storage.NewDefaultStorageConfig(),
+			},
+		},
+		{
+			Name: "ValidConfigWithValkey",
+			Path: "testdata/valid-config-valkey.yaml",
+			Result: Config{
+				LogLevel: "info",
+				Server: ServerConfig{
+					Port: DEFAULT_SERVER_PORT,
+				},
+				Storage: storage.StorageConfig{
+					Type: "valkey",
+					File: file.NewDefaultFileBackendConfig(),
+					Valkey: valkey.ValkeyConfig{
+						Addrs:     []string{"localhost:6379"},
+						Username:  "user",
+						Password:  "pass",
+						DB:        1,
+						TLS:       true,
+						Sentinel:  true,
+						MasterSet: "none",
+					},
+				},
+			},
+		},
+		{
+			Name: "ValidConfigFileBackend",
+			Path: "testdata/valid-config-file-backend.yaml",
+			Result: Config{
+				LogLevel: "warn",
+				Server: ServerConfig{
+					Port: 8080,
+				},
+				Storage: storage.StorageConfig{
+					Type:     "file",
+					Readonly: true,
+					File: file.FileBackendConfig{
+						Path: "/data/storage",
+					},
+				},
 			},
 		},
 	}
