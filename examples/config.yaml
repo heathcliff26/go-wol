@@ -26,6 +26,7 @@ storage:
   #
   # Accepted options are:
   #   - file
+  #   - valkey
   type: "file"
   # If the storage should be readonly.
   # If set to false, will check if the backend is writable on startup
@@ -34,3 +35,20 @@ storage:
   file:
     # The path to the hosts file. Will be created if it does not exist
     path: "hosts.yaml"
+  # The configuration for the valkey (redis) backend
+  valkey:
+    # The address of the valkey server
+    addresses:
+      - "localhost:6379"
+    # The username for the valkey server
+    username: ""
+    # The password for the valkey server
+    password: ""
+    # The database to use
+    db: 0
+    # Enable if using TLS
+    tls: false
+    # Enable if using sentinel
+    sentinel: false
+    # The name of the sentinel master
+    master: ""

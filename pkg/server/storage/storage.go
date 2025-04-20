@@ -10,6 +10,7 @@ import (
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/heathcliff26/go-wol/pkg/version"
 	"github.com/heathcliff26/go-wol/pkg/wol"
 	"github.com/heathcliff26/go-wol/static"
@@ -30,6 +31,8 @@ func NewStorage(cfg StorageConfig) (*Storage, error) {
 	switch cfg.Type {
 	case "file":
 		backend, err = file.NewFileBackend(cfg.File)
+	case "valkey":
+		backend, err = valkey.NewValkeyBackend(cfg.Valkey)
 	default:
 		return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)
 	}

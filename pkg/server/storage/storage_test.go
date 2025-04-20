@@ -4,8 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -42,6 +44,8 @@ func (m *MockBackend) Readonly() (bool, error) {
 
 func TestNewStorage(t *testing.T) {
 	t.Run("FileBackend", func(t *testing.T) {
+		assert := assert.New(t)
+
 		cfg := StorageConfig{
 			Type: "file",
 			File: file.FileBackendConfig{
@@ -51,21 +55,48 @@ func TestNewStorage(t *testing.T) {
 		}
 
 		s, err := NewStorage(cfg)
-		assert.NoError(t, err)
-		assert.NotNil(t, s)
-		assert.IsType(t, &file.FileBackend{}, s.backend, "Should have file as backend type")
-		assert.Equal(t, cfg.Readonly, s.readonly, "Readonly should match config")
-		assert.NotEmpty(t, s.indexHTML, "Index HTML should not be empty")
-		assert.NotEmpty(t, s.indexChecksum, "Index checksum should not be empty")
+		assert.NoError(err)
+		assert.NotNil(s)
+		assert.IsType(&file.FileBackend{}, s.backend, "Should have file as backend type")
+		assert.Equal(cfg.Readonly, s.readonly, "Readonly should match config")
+		assert.NotEmpty(s.indexHTML, "Index HTML should not be empty")
+		assert.NotEmpty(s.indexChecksum, "Index checksum should not be empty")
 	})
+
+	t.Run("ValkeyBackend", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := StorageConfig{
+			Type: "valkey",
+		}
+
+		s, err := NewStorage(cfg)
+		assert.Error(err, "Should fail to connect to valkey server")
+		assert.Nil(s, "Storage should be nil")
+
+		mr := miniredis.RunT(t)
+		cfg.Valkey.Addrs = []string{mr.Addr()}
+
+		s, err = NewStorage(cfg)
+		assert.NoError(err, "Should not return an error")
+		assert.NotNil(s, "Storage should not be nil")
+		assert.IsType(&valkey.ValkeyBackend{}, s.backend, "Should have valkey as backend type")
+		assert.NotEmpty(s.indexHTML, "Index HTML should not be empty")
+		assert.NotEmpty(s.indexChecksum, "Index checksum should not be empty")
+	})
+
 	t.Run("UnknownBackend", func(t *testing.T) {
+		assert := assert.New(t)
+
 		s, err := NewStorage(StorageConfig{Type: "unknown"})
-		assert.Nil(t, s, "Storage should be nil")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "unknown storage backend type")
+		assert.Nil(s, "Storage should be nil")
+		assert.Error(err)
+		assert.Contains(err.Error(), "unknown storage backend type")
 	})
 
 	t.Run("WritableBackend", func(t *testing.T) {
+		assert := assert.New(t)
+
 		cfg := StorageConfig{
 			Type: "file",
 			File: file.FileBackendConfig{
@@ -75,17 +106,19 @@ func TestNewStorage(t *testing.T) {
 		}
 
 		s, err := NewStorage(cfg)
-		assert.NoError(t, err, "Should not return an error")
-		assert.NotNil(t, s, "Storage should not be nil")
+		assert.NoError(err, "Should not return an error")
+		assert.NotNil(s, "Storage should not be nil")
 
-		assert.False(t, s.Readonly())
+		assert.False(s.Readonly())
 	})
 
 	t.Run("OverwriteConfigWhenReadonlyBackend", func(t *testing.T) {
+		assert := assert.New(t)
+
 		path := t.TempDir() + "/test.yaml"
 
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDONLY, 0444)
-		if !assert.NoError(t, err, "Should create file") {
+		if !assert.NoError(err, "Should create file") {
 			t.FailNow()
 		}
 		f.Close()
@@ -99,33 +132,37 @@ func TestNewStorage(t *testing.T) {
 		}
 
 		s, err := NewStorage(cfg)
-		assert.NoError(t, err, "Should not return an error")
-		assert.NotNil(t, s, "Storage should not be nil")
+		assert.NoError(err, "Should not return an error")
+		assert.NotNil(s, "Storage should not be nil")
 
-		assert.True(t, s.Readonly(), "Should ignore config if backend is readonly")
+		assert.True(s.Readonly(), "Should ignore config if backend is readonly")
 	})
 }
 
 func TestStorageGetIndexHTML(t *testing.T) {
+	assert := assert.New(t)
+
 	s := &Storage{
 		indexHTML:     "<html>Test</html>",
 		indexChecksum: "1234567890abcdef",
 	}
 
 	html, checksum := s.GetIndexHTML()
-	assert.Equal(t, s.indexHTML, html, "HTML should match")
-	assert.Equal(t, s.indexChecksum, checksum, "Checksum should match")
+	assert.Equal(s.indexHTML, html, "HTML should match")
+	assert.Equal(s.indexChecksum, checksum, "Checksum should match")
 }
 
 func TestStorageReadonly(t *testing.T) {
+	assert := assert.New(t)
+
 	s := &Storage{
 		readonly: true,
 	}
 
-	assert.True(t, s.Readonly())
+	assert.True(s.Readonly())
 
 	s.readonly = false
-	assert.False(t, s.Readonly())
+	assert.False(s.Readonly())
 }
 
 func TestStorageAddHost(t *testing.T) {
@@ -136,10 +173,12 @@ func TestStorageAddHost(t *testing.T) {
 	}
 
 	t.Run("Readonly", func(t *testing.T) {
+		assert := assert.New(t)
+
 		s.readonly = true
 		err := s.AddHost("00:11:22:33:44:55", "test")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "storage is readonly")
+		assert.Error(err)
+		assert.Contains(err.Error(), "storage is readonly")
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -165,10 +204,12 @@ func TestStorageRemoveHost(t *testing.T) {
 	}
 
 	t.Run("ReadonlyStorage", func(t *testing.T) {
+		assert := assert.New(t)
+
 		s.readonly = true
 		err := s.RemoveHost("00:11:22:33:44:55")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "storage is readonly")
+		assert.Error(err)
+		assert.Contains(err.Error(), "storage is readonly")
 	})
 
 	t.Run("SuccessfulRemove", func(t *testing.T) {
