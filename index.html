@@ -77,7 +77,7 @@
 				
 				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
 				
-				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (83.1%)</option>
+				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (85.0%)</option>
 				
 				<option value="file12">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
 				
@@ -85,11 +85,13 @@
 				
 				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (80.0%)</option>
 				
-				<option value="file15">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
+				<option value="file15">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (82.7%)</option>
 				
-				<option value="file16">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				<option value="file16">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
 				
-				<option value="file17">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
+				<option value="file17">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (93.3%)</option>
+				
+				<option value="file18">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
 				
 				</select>
 			</div>
@@ -626,7 +628,10 @@ func StaticFileServer(root embed.FS) http.Handler <span class="cov9" title="5">{
 		
 		<pre class="file" id="file8" style="display: none">package storage
 
-import "github.com/heathcliff26/go-wol/pkg/server/storage/file"
+import (
+        "github.com/heathcliff26/go-wol/pkg/server/storage/file"
+        "github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
+)
 
 const (
         DEFAULT_READONLY     = false
@@ -637,6 +642,7 @@ type StorageConfig struct {
         Type     string                 `json:"type"`
         Readonly bool                   `json:"readonly,omitempty"`
         File     file.FileBackendConfig `json:"file,omitempty"`
+        Valkey   valkey.ValkeyConfig    `json:"valkey,omitempty"`
 }
 
 func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="19">{
@@ -836,6 +842,7 @@ import (
 
         "github.com/heathcliff26/go-wol/pkg/server/storage/file"
         "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
         "github.com/heathcliff26/go-wol/pkg/version"
         "github.com/heathcliff26/go-wol/pkg/wol"
         "github.com/heathcliff26/go-wol/static"
@@ -850,37 +857,39 @@ type Storage struct {
         indexChecksum string
 }
 
-func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="10">{
+func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="12">{
         var backend types.StorageBackend
         var err error
         switch cfg.Type </span>{
         case "file":<span class="cov8" title="9">
                 backend, err = file.NewFileBackend(cfg.File)</span>
+        case "valkey":<span class="cov3" title="2">
+                backend, err = valkey.NewValkeyBackend(cfg.Valkey)</span>
         default:<span class="cov1" title="1">
                 return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)</span>
         }
-        <span class="cov8" title="9">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="11">if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to create storage backend: %w", err)
         }</span>
 
-        <span class="cov8" title="9">s := &amp;Storage{
+        <span class="cov8" title="10">s := &amp;Storage{
                 backend:  backend,
                 readonly: cfg.Readonly,
         }
 
-        if !s.readonly </span><span class="cov8" title="8">{
+        if !s.readonly </span><span class="cov8" title="9">{
                 s.readonly, err = s.backend.Readonly()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
                 }</span>
         }
 
-        <span class="cov8" title="9">err = s.updateIndexHTML()
+        <span class="cov8" title="10">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to create index.html: %w", err)
         }</span>
 
-        <span class="cov8" title="9">return s, nil</span>
+        <span class="cov8" title="10">return s, nil</span>
 }
 
 type indexValues struct {
@@ -891,7 +900,7 @@ type indexValues struct {
 }
 
 // Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error <span class="cov10" title="13">{
+func (s *Storage) updateIndexHTML() error <span class="cov10" title="14">{
         s.indexLock.Lock()
         defer s.indexLock.Unlock()
 
@@ -900,7 +909,7 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="13">{
                 return fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov10" title="13">values := indexValues{
+        <span class="cov10" title="14">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
                 Version:  version.Version(),
@@ -912,12 +921,12 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="13">{
                 return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
         }</span>
 
-        <span class="cov10" title="13">var buf bytes.Buffer
+        <span class="cov10" title="14">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, values)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to apply values to html template: %w", err)
         }</span>
-        <span class="cov10" title="13">indexHTML := buf.String()
+        <span class="cov10" title="14">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
@@ -995,15 +1004,15 @@ import (
 
 // Runs basic tests for the storage backend.
 // It will create a new backend instance for each test case.
-func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span class="cov1" title="1">{
-        t.Run("AddHost", func(t *testing.T) </span><span class="cov1" title="1">{
+func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span class="cov4" title="2">{
+        t.Run("AddHost", func(t *testing.T) </span><span class="cov4" title="2">{
                 backend := factory(t, "add-host")
 
                 err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
                 assert.NoError(t, err, "AddHost failed")
         }</span>)
 
-        <span class="cov1" title="1">t.Run("GetHost", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov4" title="2">t.Run("GetHost", func(t *testing.T) </span><span class="cov4" title="2">{
                 backend := factory(t, "get-host")
                 addHosts(t, backend)
 
@@ -1012,7 +1021,7 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                 assert.Equal(t, testHosts[0].Name, host, "Failed to retrieve host")
         }</span>)
 
-        <span class="cov1" title="1">t.Run("RemoveHost", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov4" title="2">t.Run("RemoveHost", func(t *testing.T) </span><span class="cov4" title="2">{
                 tMatrix := []struct {
                         name  string
                         index int
@@ -1031,8 +1040,8 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                         },
                 }
 
-                for i, tCase := range tMatrix </span><span class="cov10" title="3">{
-                        t.Run(tCase.name, func(t *testing.T) </span><span class="cov10" title="3">{
+                for i, tCase := range tMatrix </span><span class="cov10" title="6">{
+                        t.Run(tCase.name, func(t *testing.T) </span><span class="cov10" title="6">{
                                 backend := factory(t, fmt.Sprintf("remove-host-%d", i))
                                 addHosts(t, backend)
 
@@ -1044,14 +1053,14 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                 }
         })
 
-        <span class="cov1" title="1">t.Run("RemoveHostNonExistent", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov4" title="2">t.Run("RemoveHostNonExistent", func(t *testing.T) </span><span class="cov4" title="2">{
                 backend := factory(t, "remove-host-non-existent")
 
                 err := backend.RemoveHost("00:11:22:33:44:55")
                 assert.NoError(t, err, "RemoveHost for non-existent host failed")
         }</span>)
 
-        <span class="cov1" title="1">t.Run("GetHosts", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov4" title="2">t.Run("GetHosts", func(t *testing.T) </span><span class="cov4" title="2">{
                 backend := factory(t, "get-hosts")
                 addHosts(t, backend)
 
@@ -1073,14 +1082,14 @@ import (
 )
 
 // These tests do not run any checks themselves, they rely on race detection for that.
-func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) <span class="cov1" title="1">{
-        t.Run("ConcurrentAddHost", func(t *testing.T) </span><span class="cov1" title="1">{
+func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) <span class="cov2" title="2">{
+        t.Run("ConcurrentAddHost", func(t *testing.T) </span><span class="cov2" title="2">{
                 var wg sync.WaitGroup
                 backend := factory(t, "concurrent-add-host")
 
-                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="200">{
                         wg.Add(1)
-                        go func(i int) </span><span class="cov10" title="100">{
+                        go func(i int) </span><span class="cov10" title="200">{
                                 defer wg.Done()
 
                                 mac := fmt.Sprintf("AA:BB:CC:DD:EE:%02X", i)
@@ -1088,55 +1097,55 @@ func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) <sp
                                 _ = backend.AddHost(mac, host)
                         }</span>(i)
                 }
-                <span class="cov1" title="1">wg.Wait()</span>
+                <span class="cov2" title="2">wg.Wait()</span>
         })
 
-        <span class="cov1" title="1">t.Run("ConcurrentGetHost", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov2" title="2">t.Run("ConcurrentGetHost", func(t *testing.T) </span><span class="cov2" title="2">{
                 var wg sync.WaitGroup
                 backend := factory(t, "concurrent-get-host")
                 addHosts(t, backend)
 
-                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="200">{
                         wg.Add(1)
-                        go func() </span><span class="cov10" title="100">{
+                        go func() </span><span class="cov10" title="200">{
                                 defer wg.Done()
 
                                 _, _ = backend.GetHost(testHosts[0].MAC)
                         }</span>()
                 }
-                <span class="cov1" title="1">wg.Wait()</span>
+                <span class="cov2" title="2">wg.Wait()</span>
         })
 
-        <span class="cov1" title="1">t.Run("ConcurrentRemoveHost", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov2" title="2">t.Run("ConcurrentRemoveHost", func(t *testing.T) </span><span class="cov2" title="2">{
                 var wg sync.WaitGroup
                 backend := factory(t, "concurrent-remove-host")
                 addHosts(t, backend)
 
-                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="200">{
                         wg.Add(1)
-                        go func() </span><span class="cov10" title="100">{
+                        go func() </span><span class="cov10" title="200">{
                                 defer wg.Done()
 
                                 _ = backend.RemoveHost(testHosts[0].MAC)
                         }</span>()
                 }
-                <span class="cov1" title="1">wg.Wait()</span>
+                <span class="cov2" title="2">wg.Wait()</span>
         })
 
-        <span class="cov1" title="1">t.Run("ConcurrentGetHosts", func(t *testing.T) </span><span class="cov1" title="1">{
+        <span class="cov2" title="2">t.Run("ConcurrentGetHosts", func(t *testing.T) </span><span class="cov2" title="2">{
                 var wg sync.WaitGroup
                 backend := factory(t, "concurrent-get-hosts")
                 addHosts(t, backend)
 
-                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="100">{
+                for i := 0; i &lt; 100; i++ </span><span class="cov10" title="200">{
                         wg.Add(1)
-                        go func() </span><span class="cov10" title="100">{
+                        go func() </span><span class="cov10" title="200">{
                                 defer wg.Done()
 
                                 _, _ = backend.GetHosts()
                         }</span>()
                 }
-                <span class="cov1" title="1">wg.Wait()</span>
+                <span class="cov2" title="2">wg.Wait()</span>
         })
 }
 </pre>
@@ -1175,10 +1184,10 @@ var testHosts = []types.Host{
         },
 }
 
-func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" title="8">{
+func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" title="16">{
         t.Helper()
 
-        for _, host := range testHosts </span><span class="cov10" title="40">{
+        for _, host := range testHosts </span><span class="cov10" title="80">{
                 err := backend.AddHost(host.MAC, host.Name)
                 if !assert.NoError(t, err, "AddHost failed for %s", host.Name) </span><span class="cov0" title="0">{
                         t.FailNow()
@@ -1187,7 +1196,165 @@ func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" tit
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package version
+		<pre class="file" id="file15" style="display: none">package valkey
+
+import (
+        "context"
+        "crypto/tls"
+        "fmt"
+        "strings"
+        "time"
+
+        "github.com/heathcliff26/go-wol/pkg/server/storage/types"
+        "github.com/valkey-io/valkey-go"
+)
+
+const hostsListKey = "hosts"
+
+type ValkeyBackend struct {
+        client valkey.Client
+}
+
+type ValkeyConfig struct {
+        Addrs    []string `json:"addresses,omitempty"`
+        Username string   `json:"username,omitempty"`
+        Password string   `json:"password,omitempty"`
+        DB       int      `json:"db,omitempty"`
+        TLS      bool     `json:"tls,omitempty"`
+
+        // Options for sentinel
+        Sentinel  bool   `json:"sentinel,omitempty"`
+        MasterSet string `json:"master,omitempty"`
+}
+
+func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov4" title="15">{
+        var client valkey.Client
+        var tlsConfig *tls.Config
+
+        if cfg.TLS </span><span class="cov0" title="0">{
+                tlsConfig = &amp;tls.Config{}
+        }</span>
+
+        <span class="cov4" title="15">opt := valkey.ClientOption{
+                InitAddress: cfg.Addrs,
+                Username:    cfg.Username,
+                Password:    cfg.Password,
+                SelectDB:    cfg.DB,
+                TLSConfig:   tlsConfig,
+
+                DisableCache: true,
+        }
+
+        if cfg.Sentinel </span><span class="cov0" title="0">{
+                opt.Sentinel = valkey.SentinelOption{
+                        MasterSet: cfg.MasterSet,
+                        Username:  cfg.Username,
+                        Password:  cfg.Password,
+                }
+        }</span>
+
+        <span class="cov4" title="15">client, err := valkey.NewClient(opt)
+        if err != nil </span><span class="cov1" title="2">{
+                return nil, fmt.Errorf("failed to connect to valkey server: %w", err)
+        }</span>
+
+        <span class="cov4" title="13">return &amp;ValkeyBackend{
+                client: client,
+        }, nil</span>
+}
+
+// Add a new host, overwrite existing host name if it already exists.
+// Ensures that the MAC address is unique and uppercase.
+func (v *ValkeyBackend) AddHost(mac string, host string) error <span class="cov7" title="141">{
+        mac = strings.ToUpper(mac)
+
+        cmdAdd := v.client.B().Set().Key(mac).Value(host).Build()
+        cmdZadd := v.client.B().Zadd().Key(hostsListKey).Nx().ScoreMember().ScoreMember(float64(time.Now().UnixNano()), mac).Build()
+
+        err := v.client.Do(context.Background(), cmdAdd).Error()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to set host: %w", err)
+        }</span>
+
+        <span class="cov7" title="141">err = v.client.Do(context.Background(), cmdZadd).Error()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to add host to list: %w", err)
+        }</span>
+
+        <span class="cov7" title="141">return nil</span>
+}
+
+// Remove a host, ignore if the host does not exist
+func (v *ValkeyBackend) RemoveHost(mac string) error <span class="cov7" title="104">{
+        mac = strings.ToUpper(mac)
+
+        cmdDel := v.client.B().Del().Key(mac).Build()
+        cmdZrem := v.client.B().Zrem().Key(hostsListKey).Member(mac).Build()
+
+        err := v.client.Do(context.Background(), cmdZrem).Error()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to remove host from list: %w", err)
+        }</span>
+
+        <span class="cov7" title="104">err = v.client.Do(context.Background(), cmdDel).Error()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to delete host, but already removed host from list: %w", err)
+        }</span>
+
+        <span class="cov7" title="104">return nil</span>
+}
+
+// Return the host name for a given MAC address, return empty if not found
+func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" title="609">{
+        mac = strings.ToUpper(mac)
+
+        cmdGet := v.client.B().Get().Key(mac).Build()
+
+        val, err := v.client.Do(context.Background(), cmdGet).ToString()
+        if err != nil </span><span class="cov2" title="3">{
+                return "", fmt.Errorf("failed to get host: %w", err)
+        }</span>
+        <span class="cov9" title="606">return val, nil</span>
+}
+
+// Return all hosts
+func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="102">{
+        cmdZrange := v.client.B().Zrange().Key(hostsListKey).Min("0").Max("-1").Build()
+
+        vals, err := v.client.Do(context.Background(), cmdZrange).ToArray()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get hosts: %w", err)
+        }</span>
+
+        <span class="cov7" title="102">hosts := make([]types.Host, len(vals))
+        for i, val := range vals </span><span class="cov9" title="505">{
+                mac, err := val.ToString()
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to convert response value to string: %w", err)
+                }</span>
+
+                <span class="cov9" title="505">name, err := v.GetHost(mac)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("failed to get host name: %w", err)
+                }</span>
+                <span class="cov9" title="505">hosts[i] = types.Host{
+                        MAC:  mac,
+                        Name: name,
+                }</span>
+        }
+        <span class="cov7" title="102">return hosts, nil</span>
+}
+
+// Check if the storage backend is readonly
+func (v *ValkeyBackend) Readonly() (bool, error) <span class="cov1" title="1">{
+        // You can configure valkey to be readonly via ACL, or connect against a replica.
+        // However i do not know how to reliably check if the connection is readonly.
+        // Instead of hoping that no network error occurs on startup, we just default to assume we can write.
+        return false, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package version
 
 import (
         "runtime"
@@ -1214,7 +1381,7 @@ func NewCommand() *cobra.Command <span class="cov4" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="26">{
+func Version() string <span class="cov10" title="27">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
@@ -1244,7 +1411,7 @@ func VersionInfoString() string <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package wol
+		<pre class="file" id="file17" style="display: none">package wol
 
 import (
         "fmt"
@@ -1297,7 +1464,7 @@ func exitError(cmd *cobra.Command, err error) <span class="cov5" title="3">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package wol
+		<pre class="file" id="file18" style="display: none">package wol
 
 import (
         "encoding/binary"
