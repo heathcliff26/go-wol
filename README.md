@@ -53,6 +53,7 @@ When using the container image, please note that the server needs to run with `-
 $ podman run -d --net host -v /path/to/config.yaml:/config/config.yaml ghcr.io/heathcliff26/go-wol:latest
 ```
 If you want to use it with persistent data, run it with `-v go-wol-data:/data`. With the default configuration it will write data to `/data/hosts.yaml`.
+
 The image can be run without configuration, it will simply use the default values.
 
 ### Image location
