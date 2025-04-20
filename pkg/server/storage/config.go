@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/heathcliff26/go-wol/pkg/server/storage/file"
+import (
+	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
+)
 
 const (
 	DEFAULT_READONLY     = false
@@ -11,6 +14,7 @@ type StorageConfig struct {
 	Type     string                 `json:"type"`
 	Readonly bool                   `json:"readonly,omitempty"`
 	File     file.FileBackendConfig `json:"file,omitempty"`
+	Valkey   valkey.ValkeyConfig    `json:"valkey,omitempty"`
 }
 
 func NewDefaultStorageConfig() StorageConfig {
