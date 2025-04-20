@@ -73,7 +73,7 @@
 				
 				<option value="file8">github.com/heathcliff26/go-wol/pkg/server/storage/config.go (100.0%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (75.0%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (100.0%)</option>
 				
 				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
 				
@@ -650,11 +650,8 @@ func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="19">{
 		
 		<pre class="file" id="file9" style="display: none">package file
 
-import "os"
-
 const (
-        DEFAULT_FILE_PATH           = "hosts.yaml"
-        DEFAULT_FILE_PATH_CONTAINER = "/data/hosts.yaml"
+        DEFAULT_FILE_PATH = "hosts.yaml"
 )
 
 type FileBackendConfig struct {
@@ -662,14 +659,10 @@ type FileBackendConfig struct {
 }
 
 func NewDefaultFileBackendConfig() FileBackendConfig <span class="cov10" title="19">{
-        cfg := FileBackendConfig{
+        return FileBackendConfig{
                 Path: DEFAULT_FILE_PATH,
         }
-        if _, ok := os.LookupEnv("container"); ok </span><span class="cov0" title="0">{
-                cfg.Path = DEFAULT_FILE_PATH_CONTAINER
-        }</span>
-        <span class="cov10" title="19">return cfg</span>
-}
+}</span>
 </pre>
 		
 		<pre class="file" id="file10" style="display: none">package file
