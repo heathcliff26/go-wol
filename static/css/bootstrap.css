@@ -1174,10 +1174,6 @@ button:not(:disabled),
   }
 }
 
-.d-flex {
-  display: flex !important;
-}
-
 .shadow {
   box-shadow: var(--bs-box-shadow) !important;
 }
