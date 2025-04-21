@@ -37,6 +37,20 @@ generate-bootstrap:
 clean:
 	rm -rf bin coverprofiles coverprofile.out
 
+help:
+	@echo "Available targets:"
+	@echo "  build               Build the project"
+	@echo "  run                 Build and run the server"
+	@echo "  image               Build the container image"
+	@echo "  test                Run tests with coverage"
+	@echo "  update-deps         Update project dependencies"
+	@echo "  coverprofile        Generate coverage profile"
+	@echo "  lint                Run linter"
+	@echo "  fmt                 Format the code"
+	@echo "  validate            Validate the project"
+	@echo "  generate-bootstrap  Generate bootstrap files"
+	@echo "  clean               Clean up generated files"
+
 .PHONY: \
 	build \
 	run \
@@ -49,4 +63,5 @@ clean:
 	validate \
 	generate-bootstrap \
 	clean \
+	help \
 	$(NULL)
