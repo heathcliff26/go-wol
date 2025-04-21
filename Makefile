@@ -7,6 +7,9 @@ TAG ?= latest
 build:
 	hack/build.sh
 
+run: build
+	bin/go-wol server --log debug
+
 image:
 	podman build -t $(REPOSITORY)/$(CONTAINER_NAME):$(TAG) .
 
@@ -36,6 +39,7 @@ clean:
 
 .PHONY: \
 	build \
+	run \
 	image \
 	test \
 	update-deps \
