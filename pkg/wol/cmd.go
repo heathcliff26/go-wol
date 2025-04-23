@@ -38,10 +38,15 @@ func NewCommand() *cobra.Command {
 func run(macAddress, bcAddr string) error {
 	packet, err := CreatePacket(macAddress)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid MAC address: %w", err)
 	}
 
-	return packet.Send(bcAddr)
+	err = packet.Send(bcAddr)
+	if err != nil {
+		return fmt.Errorf("failed to send magic packet: %w", err)
+	}
+	fmt.Printf("Magic packet sent to %s\n", macAddress)
+	return nil
 }
 
 // Print the error information on stderr and exit with code 1

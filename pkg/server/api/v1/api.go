@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
+	"github.com/heathcliff26/go-wol/pkg/utils"
 	"github.com/heathcliff26/go-wol/pkg/wol"
 )
 
@@ -62,14 +62,17 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 	macAddr := req.PathValue("macAddr")
 	name := req.PathValue("name")
 
+	if !utils.ValidateMACAddress(macAddr) {
+		slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
+		res.WriteHeader(http.StatusBadRequest)
+		sendResponse(res, "Invalid MAC address")
+		return
+	}
+
 	err := h.storage.AddHost(macAddr, name)
 	if err != nil {
 		slog.Error("Failed to add host", "mac", macAddr, "name", name, "error", err)
-		if strings.HasSuffix(err.Error(), "invalid MAC address") {
-			res.WriteHeader(http.StatusBadRequest)
-		} else {
-			res.WriteHeader(http.StatusInternalServerError)
-		}
+		res.WriteHeader(http.StatusInternalServerError)
 		sendResponse(res, "Failed to add host")
 		return
 	}
@@ -82,6 +85,13 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 // Remove a host from the storage
 func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
+
+	if !utils.ValidateMACAddress(macAddr) {
+		slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
+		res.WriteHeader(http.StatusBadRequest)
+		sendResponse(res, "Invalid MAC address")
+		return
+	}
 
 	err := h.storage.RemoveHost(macAddr)
 	if err != nil {

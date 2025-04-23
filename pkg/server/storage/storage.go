@@ -12,7 +12,6 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/heathcliff26/go-wol/pkg/version"
-	"github.com/heathcliff26/go-wol/pkg/wol"
 	"github.com/heathcliff26/go-wol/static"
 )
 
@@ -123,12 +122,7 @@ func (s *Storage) AddHost(mac, host string) error {
 		return fmt.Errorf("storage is readonly")
 	}
 
-	_, err := wol.CreatePacket(mac)
-	if err != nil {
-		return fmt.Errorf("invalid MAC address: %w", err)
-	}
-
-	err = s.backend.AddHost(mac, host)
+	err := s.backend.AddHost(mac, host)
 	if err != nil {
 		return fmt.Errorf("failed to add host: %w", err)
 	}

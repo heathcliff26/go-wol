@@ -81,7 +81,7 @@ func TestAddHostHandler(t *testing.T) {
 			Status: http.StatusBadRequest,
 			Response: Response{
 				Status: "error",
-				Reason: "Failed to add host",
+				Reason: "Invalid MAC address",
 			},
 		},
 	}
@@ -135,6 +135,15 @@ func TestRemoveHostHandler(t *testing.T) {
 			Status: http.StatusOK,
 			Response: Response{
 				Status: "ok",
+			},
+		},
+		{
+			Name:   "InvalidMAC",
+			MAC:    "Invalid-MAC",
+			Status: http.StatusBadRequest,
+			Response: Response{
+				Status: "error",
+				Reason: "Invalid MAC address",
 			},
 		},
 	}
