@@ -46,3 +46,26 @@ function showAddHostModal() {
     }
     modal.show();
 }
+
+function formatAndValidateMAC(input) {
+    // Remove all non-hexadecimal characters
+    let value = input.value.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+
+    // Format the MAC address with colons
+    let formattedValue = value.match(/.{1,2}/g)?.join(':') || '';
+
+    // Limit to 17 characters (6 pairs of hex digits + 5 colons)
+    if (formattedValue.length > 17) {
+        formattedValue = formattedValue.slice(0, 17);
+    }
+
+    input.value = formattedValue;
+
+    // Validate the MAC address
+    const isValid = /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(formattedValue);
+    if (!isValid && formattedValue.length === 17) {
+        input.setCustomValidity("Invalid MAC address format");
+    } else {
+        input.setCustomValidity("");
+    }
+}
