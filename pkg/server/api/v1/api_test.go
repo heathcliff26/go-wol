@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
@@ -98,12 +99,12 @@ func TestAddHostHandler(t *testing.T) {
 					Path: tmpDir + "/" + tCase.Name + "-hosts.yaml",
 				},
 			}
-			fileBackend, err := storage.NewStorage(cfg)
+			storageBackend, err := storage.NewStorage(cfg)
 			if !assert.NoError(err, "Should create file backend without error") {
 				t.FailNow()
 			}
 
-			handler := &apiHandler{storage: fileBackend}
+			handler := &apiHandler{storage: storageBackend}
 			mux := http.NewServeMux()
 			mux.HandleFunc("PUT /hosts/{macAddr}/{name}", handler.AddHostHandler)
 
@@ -160,12 +161,12 @@ func TestRemoveHostHandler(t *testing.T) {
 					Path: tmpDir + "/" + tCase.Name + "-hosts.yaml",
 				},
 			}
-			fileBackend, err := storage.NewStorage(cfg)
+			storageBackend, err := storage.NewStorage(cfg)
 			if !assert.NoError(err, "Should create file backend without error") {
 				t.FailNow()
 			}
 
-			handler := &apiHandler{storage: fileBackend}
+			handler := &apiHandler{storage: storageBackend}
 			mux := http.NewServeMux()
 			mux.HandleFunc("DELETE /hosts/{macAddr}", handler.RemoveHostHandler)
 
@@ -183,4 +184,69 @@ func TestRemoveHostHandler(t *testing.T) {
 			assert.Equal(tCase.Response, res, "Response should match")
 		})
 	}
+}
+
+func TestStorageErrors(t *testing.T) {
+	hostsFile := t.TempDir() + "/hosts.yaml"
+
+	cfg := storage.StorageConfig{
+		Type: "file",
+		File: file.FileBackendConfig{
+			Path: hostsFile,
+		},
+	}
+
+	storageBackend, err := storage.NewStorage(cfg)
+	if !assert.NoError(t, err, "Should create file backend without error") {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, os.Chmod(hostsFile, 0444), "Should set file permissions without error") {
+		t.FailNow()
+	}
+
+	router := NewRouter(storageBackend)
+
+	t.Run("AddHost", func(t *testing.T) {
+		assert := assert.New(t)
+
+		req := httptest.NewRequest(http.MethodPut, "/hosts/FF:FF:FF:FF:FF:FF/testhost", nil)
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(http.StatusInternalServerError, rr.Result().StatusCode, "Should return correct status code")
+
+		var res Response
+		err = json.Unmarshal(rr.Body.Bytes(), &res)
+		assert.NoError(err, "Response should be json")
+
+		expectedResponse := Response{
+			Status: "error",
+			Reason: "Failed to add host",
+		}
+
+		assert.Equal(expectedResponse, res, "Response should match")
+	})
+	t.Run("RemoveHost", func(t *testing.T) {
+		assert := assert.New(t)
+
+		req := httptest.NewRequest(http.MethodDelete, "/hosts/FF:FF:FF:FF:FF:FF", nil)
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(http.StatusInternalServerError, rr.Result().StatusCode, "Should return correct status code")
+
+		var res Response
+		err = json.Unmarshal(rr.Body.Bytes(), &res)
+		assert.NoError(err, "Response should be json")
+
+		expectedResponse := Response{
+			Status: "error",
+			Reason: "Failed to remove host",
+		}
+
+		assert.Equal(expectedResponse, res, "Response should match")
+	})
 }
