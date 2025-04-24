@@ -8,6 +8,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidConfigs(t *testing.T) {
@@ -93,12 +94,8 @@ func TestValidConfigs(t *testing.T) {
 		t.Run(tCase.Name, func(t *testing.T) {
 			c, err := LoadConfig(tCase.Path, false, "")
 
-			assert := assert.New(t)
-
-			if !assert.NoError(err, "Should not return an error") {
-				t.FailNow()
-			}
-			assert.Equal(tCase.Result, c, "The config should match the expected result")
+			require.NoError(t, err, "Should not return an error")
+			assert.Equal(t, tCase.Result, c, "The config should match the expected result")
 		})
 	}
 }
@@ -136,16 +133,12 @@ func TestInvalidConfig(t *testing.T) {
 
 	for _, tCase := range tMatrix {
 		t.Run(tCase.Name, func(t *testing.T) {
-			assert := assert.New(t)
+			require := require.New(t)
 
 			_, err := LoadConfig(tCase.Path, false, "")
 
-			if !assert.Error(err, "Should return an error") {
-				t.FailNow()
-			}
-			if !assert.Contains(err.Error(), tCase.ErrorMsg, "Should return the correct error") {
-				t.FailNow()
-			}
+			require.Error(err, "Should return an error")
+			require.Contains(err.Error(), tCase.ErrorMsg, "Should return the correct error")
 		})
 	}
 }

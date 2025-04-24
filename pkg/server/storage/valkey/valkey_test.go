@@ -7,6 +7,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/testsuite"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var newMiniredis testsuite.StorageBackendFactory = func(t *testing.T, _ string) types.StorageBackend {
@@ -19,9 +20,7 @@ var newMiniredis testsuite.StorageBackendFactory = func(t *testing.T, _ string) 
 	}
 
 	v, err := NewValkeyBackend(cfg)
-	if !assert.NoError(t, err, "Failed to create valkey backend") {
-		t.FailNow()
-	}
+	require.NoError(t, err, "Failed to create valkey backend")
 
 	return v
 }

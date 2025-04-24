@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type StorageBackendFactory func(t *testing.T, name string) types.StorageBackend
@@ -37,8 +37,6 @@ func addHosts(t *testing.T, backend types.StorageBackend) {
 
 	for _, host := range testHosts {
 		err := backend.AddHost(host.MAC, host.Name)
-		if !assert.NoError(t, err, "AddHost failed for %s", host.Name) {
-			t.FailNow()
-		}
+		require.NoError(t, err, "AddHost failed for %s", host.Name)
 	}
 }
