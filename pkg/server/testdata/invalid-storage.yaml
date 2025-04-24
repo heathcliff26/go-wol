@@ -1,0 +1,5 @@
+storage:
+  type: "valkey"
+  valkey:
+    addresses:
+      - "--"

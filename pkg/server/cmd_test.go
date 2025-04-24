@@ -1,4 +1,4 @@
-package wol
+package server
 
 import (
 	"os"
@@ -6,43 +6,27 @@ import (
 	"testing"
 )
 
-func TestCMD(t *testing.T) {
+func TestServerCMD(t *testing.T) {
 	tMatrix := []struct {
-		Name, Broadcast, MAC string
-		ExitWithError        bool
-		NoMac                bool
+		Name, Config, LogLevel string
 	}{
 		{
-			Name: "MacOnly",
-			MAC:  "ff:ff:ff:ff:ff:ff",
+			Name:   "MissingConfig",
+			Config: "not-a-file",
 		},
 		{
-			Name:          "InvalidMAC",
-			MAC:           "not-a-mac",
-			ExitWithError: true,
+			Name:     "InvalidLogLevel",
+			LogLevel: "invalid",
 		},
 		{
-			Name:          "EmptyMAC",
-			MAC:           "",
-			ExitWithError: true,
-		},
-		{
-			Name:          "MissingMAC",
-			NoMac:         true,
-			ExitWithError: true,
-		},
-		{
-			Name:      "BroadcastAddress",
-			MAC:       "ff:ff:ff:ff:ff:ff",
-			Broadcast: "127.0.0.1",
-		},
-		{
-			Name:          "InvalidBroadcastAddress",
-			MAC:           "ff:ff:ff:ff:ff:ff",
-			Broadcast:     "not-an-ip",
-			ExitWithError: true,
+			Name:   "InvalidStorageBackend",
+			Config: "testdata/invalid-storage.yaml",
 		},
 	}
+
+	t.Cleanup(func() {
+		_ = os.Remove("hosts.yaml")
+	})
 
 	for _, tCase := range tMatrix {
 		t.Run(tCase.Name, func(t *testing.T) {
@@ -50,11 +34,11 @@ func TestCMD(t *testing.T) {
 				cmd := NewCommand()
 
 				args := make([]string, 0, 3)
-				if tCase.Broadcast != "" {
-					args = append(args, "--"+flagNameBroadcastAddress, tCase.Broadcast)
+				if tCase.Config != "" {
+					args = append(args, "--"+flagNameConfig, tCase.Config)
 				}
-				if !tCase.NoMac {
-					args = append(args, tCase.MAC)
+				if tCase.LogLevel != "" {
+					args = append(args, "--"+flagNameLogLevel, tCase.LogLevel)
 				}
 				cmd.SetArgs(args)
 
@@ -67,7 +51,7 @@ func TestCMD(t *testing.T) {
 				// Should not reach here, ensure exit with 0 if it does
 				os.Exit(0)
 			}
-			execExitTest(t, "TestCMD/"+tCase.Name, tCase.ExitWithError)
+			execExitTest(t, "TestServerCMD/"+tCase.Name, true)
 		})
 	}
 }
