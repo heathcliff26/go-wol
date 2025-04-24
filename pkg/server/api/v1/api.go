@@ -69,6 +69,13 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
+	if !utils.ValidateHostname(name) {
+		slog.Debug("Client send invalid hostname", slog.String("name", name))
+		res.WriteHeader(http.StatusBadRequest)
+		sendResponse(res, "Invalid hostname")
+		return
+	}
+
 	err := h.storage.AddHost(macAddr, name)
 	if err != nil {
 		slog.Error("Failed to add host", "mac", macAddr, "name", name, "error", err)

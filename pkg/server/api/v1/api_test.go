@@ -85,6 +85,16 @@ func TestAddHostHandler(t *testing.T) {
 				Reason: "Invalid MAC address",
 			},
 		},
+		{
+			Name:   "InvalidHost",
+			MAC:    "00:11:22:33:44:55",
+			Host:   "Invalid-Host@not_a_domain",
+			Status: http.StatusBadRequest,
+			Response: Response{
+				Status: "error",
+				Reason: "Invalid hostname",
+			},
+		},
 	}
 
 	tmpDir := t.TempDir()

@@ -55,7 +55,7 @@
                             {{end}}
                             <li class="list-group-item shadow">
                                 <form class="form-floating mb-3 needs-validation" id="custom-mac-form" onsubmit="wakeCustom(); return false;">
-                                    <input type="text" class="form-control" id="custom-mac-input" placeholder="Custom MAC" minlength="17" maxlength="17" required aria-label="Enter custom MAC address" oninput="formatAndValidateMAC(this)">
+                                    <input type="text" class="form-control" id="custom-mac-input" placeholder="Custom MAC" required aria-label="Enter custom MAC address" oninput="formatAndValidateMAC(this)">
                                     <label for="custom-mac-input">Custom MAC</label>
                                 </form>
                                 <div class="row">
@@ -96,22 +96,22 @@
                     <h5 class="modal-title" id="addHostModalTitle">Add New Host</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close dialog"></button>
                 </div>
-                <div class="modal-body" id="addHostModalBody">
-                    <form id="addHostForm">
+                <form id="addHostForm" class="needs-validation" onsubmit="addHost(); return false;">
+                    <div class="modal-body" id="addHostModalBody">
                         <div class="mb-3">
                             <label for="hostName" class="form-label">Host Name</label>
-                            <input type="text" class="form-control" id="hostName" required aria-label="The name of the new host">
+                            <input type="text" class="form-control" id="hostName" required aria-label="The name of the new host" oninput="validateHostname(this)">
                         </div>
                         <div class="mb-3">
                             <label for="macAddress" class="form-label">MAC Address</label>
-                            <input type="text" class="form-control" id="macAddress" minlength="17" maxlength="17" required aria-label="The MAC address of the new host" oninput="formatAndValidateMAC(this)">
+                            <input type="text" class="form-control" id="macAddress" required aria-label="The MAC address of the new host" oninput="formatAndValidateMAC(this)">
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close dialog">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="addHost();" aria-label="Add Host">Add Host</button>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close dialog">Close</button>
+                        <button type="submit" class="btn btn-primary" aria-label="Add Host">Add Host</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
