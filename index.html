@@ -59,7 +59,7 @@
 				
 				<option value="file1">github.com/heathcliff26/go-wol/cmd/main.go (75.0%)</option>
 				
-				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/v1/api.go (88.5%)</option>
+				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/v1/api.go (89.4%)</option>
 				
 				<option value="file3">github.com/heathcliff26/go-wol/pkg/server/cmd.go (84.0%)</option>
 				
@@ -223,7 +223,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov5" 
 
 // PUT /hosts/{macAddr}/{name}
 // Add a host to the storage
-func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov5" title="3">{
+func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" title="4">{
         macAddr := req.PathValue("macAddr")
         name := req.PathValue("name")
 
@@ -231,6 +231,13 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
                 slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Invalid MAC address")
+                return
+        }</span>
+
+        <span class="cov5" title="3">if !utils.ValidateHostname(name) </span><span class="cov1" title="1">{
+                slog.Debug("Client send invalid hostname", slog.String("name", name))
+                res.WriteHeader(http.StatusBadRequest)
+                sendResponse(res, "Invalid hostname")
                 return
         }</span>
 
@@ -270,7 +277,7 @@ func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Reques
         sendResponse(res, "")</span>
 }
 
-func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="9">{
+func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="10">{
         response := Response{
                 Status: "error",
                 Reason: reason,
@@ -279,13 +286,13 @@ func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" tit
                 response.Status = "ok"
         }</span>
 
-        <span class="cov10" title="9">b, err := json.MarshalIndent(response, "", "  ")
+        <span class="cov10" title="10">b, err := json.MarshalIndent(response, "", "  ")
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to create Response", "err", err)
                 return
         }</span>
 
-        <span class="cov10" title="9">rw.Header().Set("Content-Type", "application/json")
+        <span class="cov10" title="10">rw.Header().Set("Content-Type", "application/json")
 
         _, err = rw.Write(b)
         if err != nil </span><span class="cov0" title="0">{
@@ -688,7 +695,7 @@ type fileStorage struct {
         Hosts []types.Host `json:"hosts"`
 }
 
-func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="30">{
+func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="31">{
         fb := &amp;FileBackend{
                 path: cfg.Path,
                 storage: &amp;fileStorage{
@@ -697,13 +704,13 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="co
         }
 
         f, err := os.ReadFile(cfg.Path)
-        if os.IsNotExist(err) </span><span class="cov4" title="19">{
+        if os.IsNotExist(err) </span><span class="cov4" title="20">{
                 slog.Info("File not found, creating new file", slog.String("path", cfg.Path))
                 err := fb.save()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to create new storage file: %w", err)
                 }</span>
-                <span class="cov4" title="19">return fb, nil</span>
+                <span class="cov4" title="20">return fb, nil</span>
         } else<span class="cov3" title="11"> if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to read storage file: %w", err)
         }</span>
@@ -791,7 +798,7 @@ func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" ti
 }
 
 // Return all hosts
-func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="114">{
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="115">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
@@ -799,27 +806,27 @@ func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title
 }</span>
 
 // Check if the storage backend is readonly
-func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="12">{
+func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="13">{
         f, err := os.OpenFile(fb.path, os.O_RDWR, 0644)
         if err != nil </span><span class="cov1" title="2">{
                 return true, nil
         }</span>
-        <span class="cov3" title="10">f.Close()
+        <span class="cov3" title="11">f.Close()
         return false, nil</span>
 }
 
-func (fb *FileBackend) save() error <span class="cov6" title="170">{
+func (fb *FileBackend) save() error <span class="cov6" title="171">{
         data, err := yaml.Marshal(fb.storage)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to marshal storage data: %w", err)
         }</span>
 
-        <span class="cov6" title="170">err = os.WriteFile(fb.path, data, 0644)
+        <span class="cov6" title="171">err = os.WriteFile(fb.path, data, 0644)
         if err != nil </span><span class="cov2" title="3">{
                 return fmt.Errorf("failed to write storage file: %w", err)
         }</span>
 
-        <span class="cov6" title="167">slog.Debug("Storage file saved", slog.String("path", fb.path))
+        <span class="cov6" title="168">slog.Debug("Storage file saved", slog.String("path", fb.path))
         return nil</span>
 }
 </pre>
@@ -850,39 +857,39 @@ type Storage struct {
         indexChecksum string
 }
 
-func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="15">{
+func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="16">{
         var backend types.StorageBackend
         var err error
         switch cfg.Type </span>{
-        case "file":<span class="cov8" title="11">
+        case "file":<span class="cov8" title="12">
                 backend, err = file.NewFileBackend(cfg.File)</span>
         case "valkey":<span class="cov4" title="3">
                 backend, err = valkey.NewValkeyBackend(cfg.Valkey)</span>
         default:<span class="cov1" title="1">
                 return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)</span>
         }
-        <span class="cov9" title="14">if err != nil </span><span class="cov3" title="2">{
+        <span class="cov9" title="15">if err != nil </span><span class="cov3" title="2">{
                 return nil, fmt.Errorf("failed to create storage backend: %w", err)
         }</span>
 
-        <span class="cov9" title="12">s := &amp;Storage{
+        <span class="cov9" title="13">s := &amp;Storage{
                 backend:  backend,
                 readonly: cfg.Readonly,
         }
 
-        if !s.readonly </span><span class="cov8" title="11">{
+        if !s.readonly </span><span class="cov8" title="12">{
                 s.readonly, err = s.backend.Readonly()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
                 }</span>
         }
 
-        <span class="cov9" title="12">err = s.updateIndexHTML()
+        <span class="cov9" title="13">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to create index.html: %w", err)
         }</span>
 
-        <span class="cov9" title="12">return s, nil</span>
+        <span class="cov9" title="13">return s, nil</span>
 }
 
 type indexValues struct {
@@ -893,7 +900,7 @@ type indexValues struct {
 }
 
 // Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error <span class="cov10" title="16">{
+func (s *Storage) updateIndexHTML() error <span class="cov10" title="17">{
         s.indexLock.Lock()
         defer s.indexLock.Unlock()
 
@@ -902,7 +909,7 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="16">{
                 return fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov10" title="16">values := indexValues{
+        <span class="cov10" title="17">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
                 Version:  version.Version(),
@@ -914,12 +921,12 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="16">{
                 return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
         }</span>
 
-        <span class="cov10" title="16">var buf bytes.Buffer
+        <span class="cov10" title="17">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, values)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to apply values to html template: %w", err)
         }</span>
-        <span class="cov10" title="16">indexHTML := buf.String()
+        <span class="cov10" title="17">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
@@ -1344,13 +1351,41 @@ func (v *ValkeyBackend) Readonly() (bool, error) <span class="cov1" title="1">{
 		
 		<pre class="file" id="file15" style="display: none">package utils
 
-import "net"
+import (
+        "net"
+        "regexp"
+        "strings"
+)
+
+var hostnameValidCharsRegexp = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$`)
 
 // ValidateMACAddress checks if the given string is a valid MAC address.
-func ValidateMACAddress(macAddrStr string) bool <span class="cov10" title="20">{
+func ValidateMACAddress(macAddrStr string) bool <span class="cov8" title="21">{
         _, err := net.ParseMAC(macAddrStr)
         return err == nil
 }</span>
+
+// Validate that the given hostname is a valid domain name.
+func ValidateHostname(hostname string) bool <span class="cov8" title="28">{
+        // Hostname must be between 1 and 253 characters
+        if len(hostname) &lt; 1 || len(hostname) &gt; 253 </span><span class="cov2" title="2">{
+                return false
+        }</span>
+
+        <span class="cov8" title="26">labels := strings.Split(hostname, ".")
+        for _, label := range labels </span><span class="cov10" title="45">{
+                // Each label must be between 1 and 63 characters
+                if len(label) &lt; 1 || len(label) &gt; 63 </span><span class="cov4" title="4">{
+                        return false
+                }</span>
+
+                <span class="cov9" title="41">if !hostnameValidCharsRegexp.MatchString(label) </span><span class="cov5" title="8">{
+                        return false
+                }</span>
+        }
+
+        <span class="cov7" title="14">return true</span>
+}
 </pre>
 		
 		<pre class="file" id="file16" style="display: none">package version
@@ -1380,7 +1415,7 @@ func NewCommand() *cobra.Command <span class="cov3" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="29">{
+func Version() string <span class="cov10" title="30">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
