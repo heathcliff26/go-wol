@@ -61,11 +61,50 @@ function formatAndValidateMAC(input) {
 
     input.value = formattedValue;
 
-    // Validate the MAC address
-    const isValid = /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(formattedValue);
-    if (!isValid && formattedValue.length === 17) {
-        input.setCustomValidity("Invalid MAC address format");
-    } else {
+    // Pattern is already enforced by the formatting above.
+    // Only check left is the length.
+    if (formattedValue.length === 17) {
         input.setCustomValidity("");
+    } else {
+        input.setCustomValidity("MAC Address must be 17 characters long");
     }
+}
+
+function validateHostname(input) {
+    const hostname = input.value;
+
+    if (/[^a-zA-Z0-9.-]/.test(hostname)) {
+        input.setCustomValidity("Hostname can only contain letters, numbers, dots, and hyphens");
+        return;
+    }
+    if (hostname.length > 253) {
+        input.setCustomValidity("Hostname must be less than 253 characters");
+        return;
+    }
+    if (hostname.length < 1) {
+        input.setCustomValidity("Hostname cannot be empty");
+        return;
+    }
+    if (hostname.startsWith('.') || hostname.endsWith('.')) {
+        input.setCustomValidity("Hostname cannot start or end with a dot");
+        return;
+    }
+
+    const labels = hostname.split('.');
+    for (const label of labels) {
+        if (label.length > 63) {
+            input.setCustomValidity("Each label in the hostname must be less than 63 characters");
+            return;
+        }
+        if (label.length < 1) {
+            input.setCustomValidity("Each label in the hostname must be at least 1 character");
+            return;
+        }
+        if (label.startsWith('-') || label.endsWith('-')) {
+            input.setCustomValidity("Labels cannot start or end with a hyphen");
+            return;
+        }
+    }
+
+    input.setCustomValidity("");
 }
