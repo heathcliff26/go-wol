@@ -129,7 +129,7 @@ func (s *Storage) AddHost(mac, host string) error {
 
 	err = s.updateIndexHTML()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update index.html after adding host: %w", err)
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (s *Storage) RemoveHost(mac string) error {
 
 	err = s.updateIndexHTML()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update index.html after removing host: %w", err)
 	}
 
 	return nil

@@ -83,5 +83,5 @@ func (s *Server) Run() error {
 		slog.Info("Server closed, exiting")
 		return nil
 	}
-	return err
+	return fmt.Errorf("failed to start server: %w", err)
 }

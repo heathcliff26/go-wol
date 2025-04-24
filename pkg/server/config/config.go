@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -78,7 +79,7 @@ func getPath(path string) string {
 func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) {
 	c, err := loadConfigFile(path, env)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to load configuration file '%s': %w", path, err)
 	}
 
 	if logLevelOverride == "" {
@@ -87,11 +88,11 @@ func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) 
 		err = setLogLevel(logLevelOverride)
 	}
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to set log level to '%s': %w", logLevelOverride, err)
 	}
 
 	if c.Server.SSL.Enabled && (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") {
-		return Config{}, ErrIncompleteSSLConfig{}
+		return Config{}, fmt.Errorf("incomplete SSL configuration: cert and key must be set if SSL is enabled")
 	}
 
 	return c, nil
@@ -107,7 +108,7 @@ func loadConfigFile(path string, env bool) (Config, error) {
 		slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
 		return c, nil
 	} else if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to read config file '%s': %w", p, err)
 	}
 
 	if env {
@@ -116,7 +117,7 @@ func loadConfigFile(path string, env bool) (Config, error) {
 
 	err = yaml.Unmarshal(f, &c)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to unmarshal config file '%s': %w", p, err)
 	}
 
 	return c, nil
@@ -134,7 +135,7 @@ func setLogLevel(level string) error {
 	case "error":
 		logLevel.Set(slog.LevelError)
 	default:
-		return &ErrUnknownLogLevel{level}
+		return fmt.Errorf("invalid log level '%s'", level)
 	}
 	return nil
 }

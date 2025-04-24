@@ -36,25 +36,25 @@ func NewCommand() *cobra.Command {
 func run(cmd *cobra.Command) error {
 	configPath, err := cmd.Flags().GetString(flagNameConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get config flag: %w", err)
 	}
 	logLevel, err := cmd.Flags().GetString(flagNameLogLevel)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get log level flag: %w", err)
 	}
 	env, err := cmd.Flags().GetBool(flagNameEnv)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get env flag: %w", err)
 	}
 
 	cfg, err := config.LoadConfig(configPath, env, logLevel)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	server, err := NewServer(cfg.Server, cfg.Storage)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create server: %w", err)
 	}
 
 	return server.Run()

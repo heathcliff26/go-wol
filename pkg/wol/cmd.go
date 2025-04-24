@@ -38,7 +38,7 @@ func NewCommand() *cobra.Command {
 func run(macAddress, bcAddr string) error {
 	packet, err := CreatePacket(macAddress)
 	if err != nil {
-		return fmt.Errorf("invalid MAC address: %w", err)
+		return fmt.Errorf("invalid MAC address '%s': %w", macAddress, err)
 	}
 
 	err = packet.Send(bcAddr)
