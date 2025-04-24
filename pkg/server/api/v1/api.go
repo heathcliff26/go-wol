@@ -38,7 +38,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 
 	packet, err := wol.CreatePacket(macAddr)
 	if err != nil {
-		slog.Info("Client send invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
+		slog.Info("Client sent invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
 		res.WriteHeader(http.StatusBadRequest)
 		sendResponse(res, "Invalid MAC address")
 		return
@@ -52,7 +52,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	slog.Info("Send magic packet", slog.String("mac", macAddr))
+	slog.Info("Sent magic packet", slog.String("mac", macAddr))
 	sendResponse(res, "")
 }
 

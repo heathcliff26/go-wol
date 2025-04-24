@@ -2,6 +2,7 @@ package wol
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log/slog"
 	"net"
 )
@@ -21,7 +22,7 @@ type MagicPacket struct {
 func CreatePacket(macAddrStr string) (*MagicPacket, error) {
 	hwAddr, err := net.ParseMAC(macAddrStr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse MAC address '%s': %w", macAddrStr, err)
 	}
 
 	packet := &MagicPacket{}
@@ -51,18 +52,18 @@ func (p *MagicPacket) Send(bcAddr string) error {
 
 	buf, err := binary.Append(nil, binary.BigEndian, p)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to serialize magic packet: %w", err)
 	}
 
 	conn, err := net.Dial("udp", bcAddr+":9")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to dial UDP address '%s:9': %w", bcAddr, err)
 	}
 	defer conn.Close()
 
 	bytesWritten, err := conn.Write(buf)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to send magic packet to '%s:9': %w", bcAddr, err)
 	}
 
 	slog.Debug("Send packet", slog.String("broadcast", bcAddr), slog.Int("bytesWritten", bytesWritten))

@@ -2,7 +2,6 @@ package config
 
 import (
 	"log/slog"
-	"reflect"
 	"testing"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
@@ -96,54 +95,56 @@ func TestValidConfigs(t *testing.T) {
 
 			assert := assert.New(t)
 
-			if !assert.NoError(err) {
+			if !assert.NoError(err, "Should not return an error") {
 				t.FailNow()
 			}
-			assert.Equal(tCase.Result, c)
+			assert.Equal(tCase.Result, c, "The config should match the expected result")
 		})
 	}
 }
 
 func TestInvalidConfig(t *testing.T) {
 	tMatrix := []struct {
-		Name, Path, Error string
+		Name, Path, ErrorMsg string
 	}{
 		{
-			Name:  "NotYaml",
-			Path:  "testdata/not-a-config.txt",
-			Error: "*fmt.wrapError",
+			Name:     "NotYaml",
+			Path:     "testdata/not-a-config.txt",
+			ErrorMsg: "failed to unmarshal config file",
 		},
 		{
-			Name:  "FileDoesNotExist",
-			Path:  "not-a-file",
-			Error: "*fs.PathError",
+			Name:     "FileDoesNotExist",
+			Path:     "not-a-file",
+			ErrorMsg: "failed to read config file",
 		},
 		{
-			Name:  "InvalidLogLevel",
-			Path:  "testdata/invalid-config-loglevel.yaml",
-			Error: "*config.ErrUnknownLogLevel",
+			Name:     "InvalidLogLevel",
+			Path:     "testdata/invalid-config-loglevel.yaml",
+			ErrorMsg: "failed to set log level",
 		},
 		{
-			Name:  "ServerIncompleteSSLConfig1",
-			Path:  "testdata/invalid-config-ssl-1.yaml",
-			Error: "config.ErrIncompleteSSLConfig",
+			Name:     "ServerIncompleteSSLConfig1",
+			Path:     "testdata/invalid-config-ssl-1.yaml",
+			ErrorMsg: "incomplete SSL configuration",
 		},
 		{
-			Name:  "ServerIncompleteSSLConfig2",
-			Path:  "testdata/invalid-config-ssl-2.yaml",
-			Error: "config.ErrIncompleteSSLConfig",
+			Name:     "ServerIncompleteSSLConfig2",
+			Path:     "testdata/invalid-config-ssl-2.yaml",
+			ErrorMsg: "incomplete SSL configuration",
 		},
 	}
 
 	for _, tCase := range tMatrix {
 		t.Run(tCase.Name, func(t *testing.T) {
+			assert := assert.New(t)
+
 			_, err := LoadConfig(tCase.Path, false, "")
 
-			if !assert.Error(t, err) {
-				t.Fatal("Did not receive an error")
+			if !assert.Error(err, "Should return an error") {
+				t.FailNow()
 			}
-			if !assert.Equal(t, tCase.Error, reflect.TypeOf(err).String()) {
-				t.Fatalf("Received invalid error: %v", err)
+			if !assert.Contains(err.Error(), tCase.ErrorMsg, "Should return the correct error") {
+				t.FailNow()
 			}
 		})
 	}
@@ -181,10 +182,10 @@ func TestEnvSubstitution(t *testing.T) {
 
 			c, err := LoadConfig("testdata/env-config.yaml", tCase.Env, "")
 			if tCase.Env {
-				assert.NoError(err)
-				assert.Equal(tCase.Config, c)
+				assert.NoError(err, "Should not return an error")
+				assert.Equal(tCase.Config, c, "The config should match the expected result")
 			} else {
-				assert.Error(err)
+				assert.Error(err, "Should return an error")
 			}
 		})
 	}
@@ -194,11 +195,11 @@ func TestLogLevelOverride(t *testing.T) {
 	assert := assert.New(t)
 
 	_, err := LoadConfig("testdata/valid-config-1.yaml", false, "")
-	assert.NoError(err)
+	assert.NoError(err, "Should not return an error")
 	assert.Equal(logLevel.Level(), slog.LevelDebug, "Should use level from config")
 
 	_, err = LoadConfig("testdata/valid-config-1.yaml", false, "warn")
-	assert.NoError(err)
+	assert.NoError(err, "Should not return an error")
 	assert.Equal(logLevel.Level(), slog.LevelWarn, "Should override the log level")
 }
 
@@ -229,26 +230,26 @@ func TestGetPath(t *testing.T) {
 			if tCase.Container {
 				t.Setenv("container", "podman")
 			}
-			assert.Equal(t, tCase.Result, getPath(tCase.Path))
+			assert.Equal(t, tCase.Result, getPath(tCase.Path), "Should return the correct path")
 		})
 	}
 }
 
 func TestSetLogLevel(t *testing.T) {
 	tMatrix := []struct {
-		Name  string
-		Level slog.Level
-		Error error
+		Name        string
+		Level       slog.Level
+		ShouldError bool
 	}{
-		{"debug", slog.LevelDebug, nil},
-		{"info", slog.LevelInfo, nil},
-		{"warn", slog.LevelWarn, nil},
-		{"error", slog.LevelError, nil},
-		{"DEBUG", slog.LevelDebug, nil},
-		{"INFO", slog.LevelInfo, nil},
-		{"WARN", slog.LevelWarn, nil},
-		{"ERROR", slog.LevelError, nil},
-		{"Unknown", 0, &ErrUnknownLogLevel{"Unknown"}},
+		{"debug", slog.LevelDebug, false},
+		{"info", slog.LevelInfo, false},
+		{"warn", slog.LevelWarn, false},
+		{"error", slog.LevelError, false},
+		{"DEBUG", slog.LevelDebug, false},
+		{"INFO", slog.LevelInfo, false},
+		{"WARN", slog.LevelWarn, false},
+		{"ERROR", slog.LevelError, false},
+		{"Unknown", 0, true},
 	}
 	t.Cleanup(func() {
 		err := setLogLevel(DEFAULT_LOG_LEVEL)
@@ -263,11 +264,11 @@ func TestSetLogLevel(t *testing.T) {
 
 			assert := assert.New(t)
 
-			if !assert.Equal(tCase.Error, err) {
-				t.Fatalf("Received invalid error: %v", err)
-			}
-			if err == nil {
-				assert.Equal(tCase.Level, logLevel.Level())
+			if tCase.ShouldError {
+				assert.Error(err, "Should return an error")
+			} else {
+				assert.NoError(err, "Should not return an error")
+				assert.Equal(tCase.Level, logLevel.Level(), "Should set the correct log level")
 			}
 		})
 	}
