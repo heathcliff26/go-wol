@@ -65,35 +65,33 @@
 				
 				<option value="file4">github.com/heathcliff26/go-wol/pkg/server/config/config.go (100.0%)</option>
 				
-				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/config/errors.go (0.0%)</option>
+				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/server.go (87.9%)</option>
 				
-				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/server.go (87.9%)</option>
+				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
-				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
+				<option value="file7">github.com/heathcliff26/go-wol/pkg/server/storage/config.go (100.0%)</option>
 				
-				<option value="file8">github.com/heathcliff26/go-wol/pkg/server/storage/config.go (100.0%)</option>
+				<option value="file8">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (100.0%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (100.0%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
 				
-				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
+				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (84.2%)</option>
 				
-				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (84.2%)</option>
+				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
 				
-				<option value="file12">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
+				<option value="file12">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/race.go (100.0%)</option>
 				
-				<option value="file13">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/race.go (100.0%)</option>
+				<option value="file13">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (80.0%)</option>
 				
-				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (80.0%)</option>
+				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (82.7%)</option>
 				
-				<option value="file15">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (82.7%)</option>
+				<option value="file15">github.com/heathcliff26/go-wol/pkg/utils/utils.go (100.0%)</option>
 				
-				<option value="file16">github.com/heathcliff26/go-wol/pkg/utils/utils.go (100.0%)</option>
+				<option value="file16">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
 				
-				<option value="file17">github.com/heathcliff26/go-wol/pkg/version/version.go (81.0%)</option>
+				<option value="file17">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (94.7%)</option>
 				
-				<option value="file18">github.com/heathcliff26/go-wol/pkg/wol/cmd.go (94.7%)</option>
-				
-				<option value="file19">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
+				<option value="file18">github.com/heathcliff26/go-wol/pkg/wol/wol.go (92.3%)</option>
 				
 				</select>
 			</div>
@@ -205,7 +203,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" 
 
         packet, err := wol.CreatePacket(macAddr)
         if err != nil </span><span class="cov4" title="2">{
-                slog.Info("Client send invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
+                slog.Info("Client sent invalid MAC address", slog.String("mac", macAddr), slog.Any("error", err))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Invalid MAC address")
                 return
@@ -219,7 +217,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" 
                 return
         }</span>
 
-        <span class="cov1" title="1">slog.Info("Send magic packet", slog.String("mac", macAddr))
+        <span class="cov1" title="1">slog.Info("Sent magic packet", slog.String("mac", macAddr))
         sendResponse(res, "")</span>
 }
 
@@ -334,25 +332,25 @@ func NewCommand() *cobra.Command <span class="cov10" title="2">{
 func run(cmd *cobra.Command) error <span class="cov0" title="0">{
         configPath, err := cmd.Flags().GetString(flagNameConfig)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to get config flag: %w", err)
         }</span>
         <span class="cov0" title="0">logLevel, err := cmd.Flags().GetString(flagNameLogLevel)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to get log level flag: %w", err)
         }</span>
         <span class="cov0" title="0">env, err := cmd.Flags().GetBool(flagNameEnv)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to get env flag: %w", err)
         }</span>
 
         <span class="cov0" title="0">cfg, err := config.LoadConfig(configPath, env, logLevel)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to load config: %w", err)
         }</span>
 
         <span class="cov0" title="0">server, err := NewServer(cfg.Server, cfg.Storage)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to create server: %w", err)
         }</span>
 
         <span class="cov0" title="0">return server.Run()</span>
@@ -362,6 +360,7 @@ func run(cmd *cobra.Command) error <span class="cov0" title="0">{
 		<pre class="file" id="file4" style="display: none">package config
 
 import (
+        "fmt"
         "log/slog"
         "os"
         "strings"
@@ -439,7 +438,7 @@ func getPath(path string) string <span class="cov9" title="17">{
 func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) <span class="cov8" title="14">{
         c, err := loadConfigFile(path, env)
         if err != nil </span><span class="cov4" title="3">{
-                return Config{}, err
+                return Config{}, fmt.Errorf("failed to load configuration file '%s': %w", path, err)
         }</span>
 
         <span class="cov8" title="11">if logLevelOverride == "" </span><span class="cov7" title="10">{
@@ -448,11 +447,11 @@ func LoadConfig(path string, env bool, logLevelOverride string) (Config, error) 
                 err = setLogLevel(logLevelOverride)
         }</span>
         <span class="cov8" title="11">if err != nil </span><span class="cov1" title="1">{
-                return Config{}, err
+                return Config{}, fmt.Errorf("failed to set log level to '%s': %w", logLevelOverride, err)
         }</span>
 
         <span class="cov7" title="10">if c.Server.SSL.Enabled &amp;&amp; (c.Server.SSL.Cert == "" || c.Server.SSL.Key == "") </span><span class="cov3" title="2">{
-                return Config{}, ErrIncompleteSSLConfig{}
+                return Config{}, fmt.Errorf("incomplete SSL configuration: cert and key must be set if SSL is enabled")
         }</span>
 
         <span class="cov7" title="8">return c, nil</span>
@@ -468,7 +467,7 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" ti
                 slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
                 return c, nil
         }</span> else<span class="cov8" title="13"> if err != nil </span><span class="cov1" title="1">{
-                return Config{}, err
+                return Config{}, fmt.Errorf("failed to read config file '%s': %w", p, err)
         }</span>
 
         <span class="cov8" title="12">if env </span><span class="cov1" title="1">{
@@ -477,7 +476,7 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov8" ti
 
         <span class="cov8" title="12">err = yaml.Unmarshal(f, &amp;c)
         if err != nil </span><span class="cov3" title="2">{
-                return Config{}, err
+                return Config{}, fmt.Errorf("failed to unmarshal config file '%s': %w", p, err)
         }</span>
 
         <span class="cov7" title="10">return c, nil</span>
@@ -495,30 +494,13 @@ func setLogLevel(level string) error <span class="cov10" title="21">{
         case "error":<span class="cov4" title="3">
                 logLevel.Set(slog.LevelError)</span>
         default:<span class="cov3" title="2">
-                return &amp;ErrUnknownLogLevel{level}</span>
+                return fmt.Errorf("invalid log level '%s'", level)</span>
         }
         <span class="cov9" title="19">return nil</span>
 }
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package config
-
-type ErrUnknownLogLevel struct {
-        Level string
-}
-
-func (e *ErrUnknownLogLevel) Error() string <span class="cov0" title="0">{
-        return "Unknown log level " + e.Level
-}</span>
-
-type ErrIncompleteSSLConfig struct{}
-
-func (e ErrIncompleteSSLConfig) Error() string <span class="cov0" title="0">{
-        return "SSL is enabled but certificate and/or private key are missing"
-}</span>
-</pre>
-		
-		<pre class="file" id="file6" style="display: none">package server
+		<pre class="file" id="file5" style="display: none">package server
 
 import (
         "errors"
@@ -603,11 +585,11 @@ func (s *Server) Run() error <span class="cov6" title="2">{
                 slog.Info("Server closed, exiting")
                 return nil
         }</span>
-        <span class="cov1" title="1">return err</span>
+        <span class="cov1" title="1">return fmt.Errorf("failed to start server: %w", err)</span>
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package server
+		<pre class="file" id="file6" style="display: none">package server
 
 import (
         "embed"
@@ -638,7 +620,7 @@ func StaticFileServer(root embed.FS) http.Handler <span class="cov9" title="5">{
 }
 </pre>
 		
-		<pre class="file" id="file8" style="display: none">package storage
+		<pre class="file" id="file7" style="display: none">package storage
 
 import (
         "github.com/heathcliff26/go-wol/pkg/server/storage/file"
@@ -666,7 +648,7 @@ func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="21">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file9" style="display: none">package file
+		<pre class="file" id="file8" style="display: none">package file
 
 const (
         DEFAULT_FILE_PATH = "hosts.yaml"
@@ -683,7 +665,7 @@ func NewDefaultFileBackendConfig() FileBackendConfig <span class="cov10" title="
 }</span>
 </pre>
 		
-		<pre class="file" id="file10" style="display: none">package file
+		<pre class="file" id="file9" style="display: none">package file
 
 import (
         "fmt"
@@ -842,7 +824,7 @@ func (fb *FileBackend) save() error <span class="cov6" title="167">{
 }
 </pre>
 		
-		<pre class="file" id="file11" style="display: none">package storage
+		<pre class="file" id="file10" style="display: none">package storage
 
 import (
         "bytes"
@@ -973,7 +955,7 @@ func (s *Storage) AddHost(mac, host string) error <span class="cov4" title="3">{
 
         <span class="cov3" title="2">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to update index.html after adding host: %w", err)
         }</span>
 
         <span class="cov3" title="2">return nil</span>
@@ -992,14 +974,14 @@ func (s *Storage) RemoveHost(mac string) error <span class="cov4" title="3">{
 
         <span class="cov3" title="2">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to update index.html after removing host: %w", err)
         }</span>
 
         <span class="cov3" title="2">return nil</span>
 }
 </pre>
 		
-		<pre class="file" id="file12" style="display: none">package testsuite
+		<pre class="file" id="file11" style="display: none">package testsuite
 
 import (
         "fmt"
@@ -1077,7 +1059,7 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
 }
 </pre>
 		
-		<pre class="file" id="file13" style="display: none">//go:build race
+		<pre class="file" id="file12" style="display: none">//go:build race
 
 package testsuite
 
@@ -1156,7 +1138,7 @@ func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) <sp
 }
 </pre>
 		
-		<pre class="file" id="file14" style="display: none">package testsuite
+		<pre class="file" id="file13" style="display: none">package testsuite
 
 import (
         "testing"
@@ -1202,7 +1184,7 @@ func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" tit
 }
 </pre>
 		
-		<pre class="file" id="file15" style="display: none">package valkey
+		<pre class="file" id="file14" style="display: none">package valkey
 
 import (
         "context"
@@ -1360,7 +1342,7 @@ func (v *ValkeyBackend) Readonly() (bool, error) <span class="cov1" title="1">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file16" style="display: none">package utils
+		<pre class="file" id="file15" style="display: none">package utils
 
 import "net"
 
@@ -1371,7 +1353,7 @@ func ValidateMACAddress(macAddrStr string) bool <span class="cov10" title="18">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file17" style="display: none">package version
+		<pre class="file" id="file16" style="display: none">package version
 
 import (
         "runtime"
@@ -1428,7 +1410,7 @@ func VersionInfoString() string <span class="cov1" title="1">{
 }
 </pre>
 		
-		<pre class="file" id="file18" style="display: none">package wol
+		<pre class="file" id="file17" style="display: none">package wol
 
 import (
         "fmt"
@@ -1468,7 +1450,7 @@ func NewCommand() *cobra.Command <span class="cov10" title="8">{
 func run(macAddress, bcAddr string) error <span class="cov7" title="5">{
         packet, err := CreatePacket(macAddress)
         if err != nil </span><span class="cov4" title="2">{
-                return fmt.Errorf("invalid MAC address: %w", err)
+                return fmt.Errorf("invalid MAC address '%s': %w", macAddress, err)
         }</span>
 
         <span class="cov5" title="3">err = packet.Send(bcAddr)
@@ -1486,10 +1468,11 @@ func exitError(cmd *cobra.Command, err error) <span class="cov5" title="3">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file19" style="display: none">package wol
+		<pre class="file" id="file18" style="display: none">package wol
 
 import (
         "encoding/binary"
+        "fmt"
         "log/slog"
         "net"
 )
@@ -1509,7 +1492,7 @@ type MagicPacket struct {
 func CreatePacket(macAddrStr string) (*MagicPacket, error) <span class="cov5" title="8">{
         hwAddr, err := net.ParseMAC(macAddrStr)
         if err != nil </span><span class="cov4" title="4">{
-                return nil, err
+                return nil, fmt.Errorf("failed to parse MAC address '%s': %w", macAddrStr, err)
         }</span>
 
         <span class="cov4" title="4">packet := &amp;MagicPacket{}
@@ -1539,18 +1522,18 @@ func (p *MagicPacket) Send(bcAddr string) error <span class="cov4" title="4">{
 
         <span class="cov4" title="4">buf, err := binary.Append(nil, binary.BigEndian, p)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to serialize magic packet: %w", err)
         }</span>
 
         <span class="cov4" title="4">conn, err := net.Dial("udp", bcAddr+":9")
         if err != nil </span><span class="cov1" title="1">{
-                return err
+                return fmt.Errorf("failed to dial UDP address '%s:9': %w", bcAddr, err)
         }</span>
         <span class="cov3" title="3">defer conn.Close()
 
         bytesWritten, err := conn.Write(buf)
         if err != nil </span><span class="cov0" title="0">{
-                return err
+                return fmt.Errorf("failed to send magic packet to '%s:9': %w", bcAddr, err)
         }</span>
 
         <span class="cov3" title="3">slog.Debug("Send packet", slog.String("broadcast", bcAddr), slog.Int("bytesWritten", bytesWritten))
