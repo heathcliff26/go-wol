@@ -73,4 +73,72 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 		assert.NoError(t, err, "GetHosts failed")
 		assert.Equal(t, testHosts, hosts, "Expected result to match testHosts")
 	})
+
+	t.Run("CaseInsensitiveMAC", func(t *testing.T) {
+		assert := assert.New(t)
+		backend := factory(t, "case-insensitive-mac")
+
+		err := backend.AddHost("aa:bb:cc:dd:ee:ff", "LowerCase")
+
+		if !assert.NoError(err, "Should add host") {
+			t.FailNow()
+		}
+
+		host, err := backend.GetHost("AA:BB:CC:dd:ee:ff")
+		assert.NoError(err, "Should get host regardless of case")
+		assert.Equal("LowerCase", host, "Should get correct host name")
+
+		hosts, err := backend.GetHosts()
+		assert.NoError(err, "Should get hosts")
+
+		if !assert.Len(hosts, 1, "Should have one host") {
+			t.FailNow()
+		}
+		assert.Equal("LowerCase", hosts[0].Name, "Should get correct host name")
+		assert.Equal("AA:BB:CC:DD:EE:FF", hosts[0].MAC, "Should store MAC in upper case")
+	})
+
+	t.Run("AddHostOverwrite", func(t *testing.T) {
+		assert := assert.New(t)
+		backend := factory(t, "add-host-overwrite")
+
+		err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
+		if !assert.NoError(err, "Should add host") {
+			t.FailNow()
+		}
+
+		err = backend.AddHost(testHosts[0].MAC, "NewName")
+		if !assert.NoError(err, "Should overwrite host") {
+			t.FailNow()
+		}
+
+		hosts, err := backend.GetHosts()
+		assert.NoError(err, "Should get hosts")
+		if !assert.Len(hosts, 1, "Should have one host") {
+			t.FailNow()
+		}
+		assert.Equal("NewName", hosts[0].Name, "Should have new name")
+	})
+
+	t.Run("HostOverwriteShouldKeepOrder", func(t *testing.T) {
+		assert := assert.New(t)
+		backend := factory(t, "host-overwrite-keep-order")
+		addHosts(t, backend)
+
+		err := backend.AddHost(testHosts[0].MAC, "NewName")
+		if !assert.NoError(err, "Should overwrite host") {
+			t.FailNow()
+		}
+
+		hosts, err := backend.GetHosts()
+		assert.NoError(err, "Should get hosts")
+		if !assert.Len(hosts, len(testHosts), "Should have same number of hosts") {
+			t.FailNow()
+		}
+		assert.Equal("NewName", hosts[0].Name, "Should have new name")
+
+		for i, host := range hosts {
+			assert.Equal(testHosts[i].MAC, host.MAC, "Should keep order")
+		}
+	})
 }
