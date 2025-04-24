@@ -10,6 +10,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWakeHandler(t *testing.T) {
@@ -110,9 +111,7 @@ func TestAddHostHandler(t *testing.T) {
 				},
 			}
 			storageBackend, err := storage.NewStorage(cfg)
-			if !assert.NoError(err, "Should create file backend without error") {
-				t.FailNow()
-			}
+			require.NoError(t, err, "Should create file backend without error")
 
 			handler := &apiHandler{storage: storageBackend}
 			mux := http.NewServeMux()
@@ -172,9 +171,7 @@ func TestRemoveHostHandler(t *testing.T) {
 				},
 			}
 			storageBackend, err := storage.NewStorage(cfg)
-			if !assert.NoError(err, "Should create file backend without error") {
-				t.FailNow()
-			}
+			require.NoError(t, err, "Should create file backend without error")
 
 			handler := &apiHandler{storage: storageBackend}
 			mux := http.NewServeMux()
@@ -207,13 +204,9 @@ func TestStorageErrors(t *testing.T) {
 	}
 
 	storageBackend, err := storage.NewStorage(cfg)
-	if !assert.NoError(t, err, "Should create file backend without error") {
-		t.FailNow()
-	}
+	require.NoError(t, err, "Should create file backend without error")
 
-	if !assert.NoError(t, os.Chmod(hostsFile, 0444), "Should set file permissions without error") {
-		t.FailNow()
-	}
+	require.NoError(t, os.Chmod(hostsFile, 0444), "Should set file permissions without error")
 
 	router := NewRouter(storageBackend)
 

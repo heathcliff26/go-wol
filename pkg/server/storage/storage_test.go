@@ -10,6 +10,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 type MockBackend struct {
@@ -118,9 +119,7 @@ func TestNewStorage(t *testing.T) {
 		path := t.TempDir() + "/test.yaml"
 
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDONLY, 0444)
-		if !assert.NoError(err, "Should create file") {
-			t.FailNow()
-		}
+		require.NoError(t, err, "Should create file")
 		f.Close()
 
 		cfg := StorageConfig{

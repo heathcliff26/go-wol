@@ -9,10 +9,12 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/static"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewServer(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	cfgServer := config.ServerConfig{
 		Port: 8080,
@@ -27,9 +29,8 @@ func TestNewServer(t *testing.T) {
 
 	s, err := NewServer(cfgServer, cfgStorage)
 
-	if !assert.NoError(err, "Should create new server") || !assert.NotNil(s, "Server should not be empty") {
-		t.FailNow()
-	}
+	require.NoError(err, "Should create new server")
+	require.NotNil(s, "Server should not be empty")
 
 	indexHTML, indexChecksum := s.storage.GetIndexHTML()
 
@@ -58,9 +59,7 @@ func TestServer(t *testing.T) {
 		cfgStorage.File.Path = "testdata/hosts.yaml"
 
 		s, err := NewServer(cfgServer, cfgStorage)
-		if !assert.NoError(err, "Should create server without error") {
-			t.FailNow()
-		}
+		require.NoError(t, err, "Should create server without error")
 
 		assert.Error(s.Run(), "Server should fail to run, as the ssl certificate and key do not exist")
 	})
@@ -70,9 +69,7 @@ func TestServer(t *testing.T) {
 	cfgStorage := storage.NewDefaultStorageConfig()
 	cfgStorage.File.Path = "testdata/hosts.yaml"
 	s, err := NewServer(cfgServer, cfgStorage)
-	if !assert.NoError(t, err, "Should create server without error") {
-		t.FailNow()
-	}
+	require.NoError(t, err, "Should create server without error")
 
 	go func() {
 		err := s.Run()
