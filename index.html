@@ -73,11 +73,11 @@
 				
 				<option value="file8">github.com/heathcliff26/go-wol/pkg/server/storage/file/config.go (100.0%)</option>
 				
-				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (94.4%)</option>
+				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (97.2%)</option>
 				
 				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (87.7%)</option>
 				
-				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
+				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (90.4%)</option>
 				
 				<option value="file12">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/race.go (100.0%)</option>
 				
@@ -695,7 +695,7 @@ type fileStorage struct {
         Hosts []types.Host `json:"hosts"`
 }
 
-func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="31">{
+func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="34">{
         fb := &amp;FileBackend{
                 path: cfg.Path,
                 storage: &amp;fileStorage{
@@ -704,13 +704,13 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="co
         }
 
         f, err := os.ReadFile(cfg.Path)
-        if os.IsNotExist(err) </span><span class="cov4" title="20">{
+        if os.IsNotExist(err) </span><span class="cov4" title="23">{
                 slog.Info("File not found, creating new file", slog.String("path", cfg.Path))
                 err := fb.save()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to create new storage file: %w", err)
                 }</span>
-                <span class="cov4" title="20">return fb, nil</span>
+                <span class="cov4" title="23">return fb, nil</span>
         } else<span class="cov3" title="11"> if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to read storage file: %w", err)
         }</span>
@@ -752,19 +752,19 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="co
 
 // Add a new host, overwrite existing host name if it already exists.
 // Ensures that the MAC address is unique and uppercase.
-func (fb *FileBackend) AddHost(mac string, name string) error <span class="cov6" title="143">{
+func (fb *FileBackend) AddHost(mac string, name string) error <span class="cov6" title="152">{
         fb.lock.Lock()
         defer fb.lock.Unlock()
 
         uppercaseMAC := strings.ToUpper(mac)
-        for i, host := range fb.storage.Hosts </span><span class="cov10" title="5030">{
-                if host.MAC == uppercaseMAC </span><span class="cov0" title="0">{
+        for i, host := range fb.storage.Hosts </span><span class="cov10" title="5042">{
+                if host.MAC == uppercaseMAC </span><span class="cov1" title="2">{
                         fb.storage.Hosts[i].Name = name
                         return fb.save()
                 }</span>
         }
 
-        <span class="cov6" title="143">fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
+        <span class="cov6" title="150">fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
         return fb.save()</span>
 }
 
@@ -784,13 +784,13 @@ func (fb *FileBackend) RemoveHost(mac string) error <span class="cov5" title="10
 }
 
 // Return the host name for a given MAC address, return empty if not found
-func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" title="104">{
+func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" title="105">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
         uppercaseMAC := strings.ToUpper(mac)
-        for _, host := range fb.storage.Hosts </span><span class="cov5" title="113">{
-                if host.MAC == uppercaseMAC </span><span class="cov5" title="101">{
+        for _, host := range fb.storage.Hosts </span><span class="cov5" title="114">{
+                if host.MAC == uppercaseMAC </span><span class="cov5" title="102">{
                         return host.Name, nil
                 }</span>
         }
@@ -798,7 +798,7 @@ func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" ti
 }
 
 // Return all hosts
-func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="115">{
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="118">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
@@ -815,18 +815,18 @@ func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="13">{
         return false, nil</span>
 }
 
-func (fb *FileBackend) save() error <span class="cov6" title="171">{
+func (fb *FileBackend) save() error <span class="cov6" title="183">{
         data, err := yaml.Marshal(fb.storage)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to marshal storage data: %w", err)
         }</span>
 
-        <span class="cov6" title="171">err = os.WriteFile(fb.path, data, 0644)
+        <span class="cov6" title="183">err = os.WriteFile(fb.path, data, 0644)
         if err != nil </span><span class="cov2" title="3">{
                 return fmt.Errorf("failed to write storage file: %w", err)
         }</span>
 
-        <span class="cov6" title="168">slog.Debug("Storage file saved", slog.String("path", fb.path))
+        <span class="cov6" title="180">slog.Debug("Storage file saved", slog.String("path", fb.path))
         return nil</span>
 }
 </pre>
@@ -999,15 +999,15 @@ import (
 
 // Runs basic tests for the storage backend.
 // It will create a new backend instance for each test case.
-func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span class="cov4" title="2">{
-        t.Run("AddHost", func(t *testing.T) </span><span class="cov4" title="2">{
+func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span class="cov3" title="2">{
+        t.Run("AddHost", func(t *testing.T) </span><span class="cov3" title="2">{
                 backend := factory(t, "add-host")
 
                 err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
                 assert.NoError(t, err, "AddHost failed")
         }</span>)
 
-        <span class="cov4" title="2">t.Run("GetHost", func(t *testing.T) </span><span class="cov4" title="2">{
+        <span class="cov3" title="2">t.Run("GetHost", func(t *testing.T) </span><span class="cov3" title="2">{
                 backend := factory(t, "get-host")
                 addHosts(t, backend)
 
@@ -1016,7 +1016,7 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                 assert.Equal(t, testHosts[0].Name, host, "Failed to retrieve host")
         }</span>)
 
-        <span class="cov4" title="2">t.Run("RemoveHost", func(t *testing.T) </span><span class="cov4" title="2">{
+        <span class="cov3" title="2">t.Run("RemoveHost", func(t *testing.T) </span><span class="cov3" title="2">{
                 tMatrix := []struct {
                         name  string
                         index int
@@ -1035,8 +1035,8 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                         },
                 }
 
-                for i, tCase := range tMatrix </span><span class="cov10" title="6">{
-                        t.Run(tCase.name, func(t *testing.T) </span><span class="cov10" title="6">{
+                for i, tCase := range tMatrix </span><span class="cov8" title="6">{
+                        t.Run(tCase.name, func(t *testing.T) </span><span class="cov8" title="6">{
                                 backend := factory(t, fmt.Sprintf("remove-host-%d", i))
                                 addHosts(t, backend)
 
@@ -1048,14 +1048,14 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                 }
         })
 
-        <span class="cov4" title="2">t.Run("RemoveHostNonExistent", func(t *testing.T) </span><span class="cov4" title="2">{
+        <span class="cov3" title="2">t.Run("RemoveHostNonExistent", func(t *testing.T) </span><span class="cov3" title="2">{
                 backend := factory(t, "remove-host-non-existent")
 
                 err := backend.RemoveHost("00:11:22:33:44:55")
                 assert.NoError(t, err, "RemoveHost for non-existent host failed")
         }</span>)
 
-        <span class="cov4" title="2">t.Run("GetHosts", func(t *testing.T) </span><span class="cov4" title="2">{
+        <span class="cov3" title="2">t.Run("GetHosts", func(t *testing.T) </span><span class="cov3" title="2">{
                 backend := factory(t, "get-hosts")
                 addHosts(t, backend)
 
@@ -1063,6 +1063,74 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) <span c
                 assert.NoError(t, err, "GetHosts failed")
                 assert.Equal(t, testHosts, hosts, "Expected result to match testHosts")
         }</span>)
+
+        <span class="cov3" title="2">t.Run("CaseInsensitiveMAC", func(t *testing.T) </span><span class="cov3" title="2">{
+                assert := assert.New(t)
+                backend := factory(t, "case-insensitive-mac")
+
+                err := backend.AddHost("aa:bb:cc:dd:ee:ff", "LowerCase")
+
+                if !assert.NoError(err, "Should add host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+
+                <span class="cov3" title="2">host, err := backend.GetHost("AA:BB:CC:dd:ee:ff")
+                assert.NoError(err, "Should get host regardless of case")
+                assert.Equal("LowerCase", host, "Should get correct host name")
+
+                hosts, err := backend.GetHosts()
+                assert.NoError(err, "Should get hosts")
+
+                if !assert.Len(hosts, 1, "Should have one host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+                <span class="cov3" title="2">assert.Equal("LowerCase", hosts[0].Name, "Should get correct host name")
+                assert.Equal("AA:BB:CC:DD:EE:FF", hosts[0].MAC, "Should store MAC in upper case")</span>
+        })
+
+        <span class="cov3" title="2">t.Run("AddHostOverwrite", func(t *testing.T) </span><span class="cov3" title="2">{
+                assert := assert.New(t)
+                backend := factory(t, "add-host-overwrite")
+
+                err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
+                if !assert.NoError(err, "Should add host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+
+                <span class="cov3" title="2">err = backend.AddHost(testHosts[0].MAC, "NewName")
+                if !assert.NoError(err, "Should overwrite host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+
+                <span class="cov3" title="2">hosts, err := backend.GetHosts()
+                assert.NoError(err, "Should get hosts")
+                if !assert.Len(hosts, 1, "Should have one host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+                <span class="cov3" title="2">assert.Equal("NewName", hosts[0].Name, "Should have new name")</span>
+        })
+
+        <span class="cov3" title="2">t.Run("HostOverwriteShouldKeepOrder", func(t *testing.T) </span><span class="cov3" title="2">{
+                assert := assert.New(t)
+                backend := factory(t, "host-overwrite-keep-order")
+                addHosts(t, backend)
+
+                err := backend.AddHost(testHosts[0].MAC, "NewName")
+                if !assert.NoError(err, "Should overwrite host") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+
+                <span class="cov3" title="2">hosts, err := backend.GetHosts()
+                assert.NoError(err, "Should get hosts")
+                if !assert.Len(hosts, len(testHosts), "Should have same number of hosts") </span><span class="cov0" title="0">{
+                        t.FailNow()
+                }</span>
+                <span class="cov3" title="2">assert.Equal("NewName", hosts[0].Name, "Should have new name")
+
+                for i, host := range hosts </span><span class="cov10" title="10">{
+                        assert.Equal(testHosts[i].MAC, host.MAC, "Should keep order")
+                }</span>
+        })
 }
 </pre>
 		
@@ -1179,10 +1247,10 @@ var testHosts = []types.Host{
         },
 }
 
-func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" title="16">{
+func addHosts(t *testing.T, backend types.StorageBackend) <span class="cov6" title="18">{
         t.Helper()
 
-        for _, host := range testHosts </span><span class="cov10" title="80">{
+        for _, host := range testHosts </span><span class="cov10" title="90">{
                 err := backend.AddHost(host.MAC, host.Name)
                 if !assert.NoError(t, err, "AddHost failed for %s", host.Name) </span><span class="cov0" title="0">{
                         t.FailNow()
@@ -1222,7 +1290,7 @@ type ValkeyConfig struct {
         MasterSet string `json:"master,omitempty"`
 }
 
-func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov4" title="16">{
+func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov5" title="19">{
         var client valkey.Client
         var tlsConfig *tls.Config
 
@@ -1230,7 +1298,7 @@ func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov
                 tlsConfig = &amp;tls.Config{}
         }</span>
 
-        <span class="cov4" title="16">opt := valkey.ClientOption{
+        <span class="cov5" title="19">opt := valkey.ClientOption{
                 InitAddress: cfg.Addrs,
                 Username:    cfg.Username,
                 Password:    cfg.Password,
@@ -1248,19 +1316,19 @@ func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov
                 }
         }</span>
 
-        <span class="cov4" title="16">client, err := valkey.NewClient(opt)
+        <span class="cov5" title="19">client, err := valkey.NewClient(opt)
         if err != nil </span><span class="cov2" title="3">{
                 return nil, fmt.Errorf("failed to connect to valkey server: %w", err)
         }</span>
 
-        <span class="cov4" title="13">return &amp;ValkeyBackend{
+        <span class="cov4" title="16">return &amp;ValkeyBackend{
                 client: client,
         }, nil</span>
 }
 
 // Add a new host, overwrite existing host name if it already exists.
 // Ensures that the MAC address is unique and uppercase.
-func (v *ValkeyBackend) AddHost(mac string, host string) error <span class="cov7" title="141">{
+func (v *ValkeyBackend) AddHost(mac string, host string) error <span class="cov8" title="150">{
         mac = strings.ToUpper(mac)
 
         cmdAdd := v.client.B().Set().Key(mac).Value(host).Build()
@@ -1271,12 +1339,12 @@ func (v *ValkeyBackend) AddHost(mac string, host string) error <span class="cov7
                 return fmt.Errorf("failed to set host: %w", err)
         }</span>
 
-        <span class="cov7" title="141">err = v.client.Do(context.Background(), cmdZadd).Error()
+        <span class="cov8" title="150">err = v.client.Do(context.Background(), cmdZadd).Error()
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to add host to list: %w", err)
         }</span>
 
-        <span class="cov7" title="141">return nil</span>
+        <span class="cov8" title="150">return nil</span>
 }
 
 // Remove a host, ignore if the host does not exist
@@ -1300,7 +1368,7 @@ func (v *ValkeyBackend) RemoveHost(mac string) error <span class="cov7" title="1
 }
 
 // Return the host name for a given MAC address, return empty if not found
-func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" title="609">{
+func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" title="617">{
         mac = strings.ToUpper(mac)
 
         cmdGet := v.client.B().Get().Key(mac).Build()
@@ -1309,11 +1377,11 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" 
         if err != nil </span><span class="cov2" title="3">{
                 return "", fmt.Errorf("failed to get host: %w", err)
         }</span>
-        <span class="cov9" title="606">return val, nil</span>
+        <span class="cov9" title="614">return val, nil</span>
 }
 
 // Return all hosts
-func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="102">{
+func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="105">{
         cmdZrange := v.client.B().Zrange().Key(hostsListKey).Min("0").Max("-1").Build()
 
         vals, err := v.client.Do(context.Background(), cmdZrange).ToArray()
@@ -1321,23 +1389,23 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" titl
                 return nil, fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov7" title="102">hosts := make([]types.Host, len(vals))
-        for i, val := range vals </span><span class="cov9" title="505">{
+        <span class="cov7" title="105">hosts := make([]types.Host, len(vals))
+        for i, val := range vals </span><span class="cov9" title="512">{
                 mac, err := val.ToString()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to convert response value to string: %w", err)
                 }</span>
 
-                <span class="cov9" title="505">name, err := v.GetHost(mac)
+                <span class="cov9" title="512">name, err := v.GetHost(mac)
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to get host name: %w", err)
                 }</span>
-                <span class="cov9" title="505">hosts[i] = types.Host{
+                <span class="cov9" title="512">hosts[i] = types.Host{
                         MAC:  mac,
                         Name: name,
                 }</span>
         }
-        <span class="cov7" title="102">return hosts, nil</span>
+        <span class="cov7" title="105">return hosts, nil</span>
 }
 
 // Check if the storage backend is readonly
