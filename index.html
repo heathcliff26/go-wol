@@ -469,6 +469,7 @@ func loadConfigFile(path string, env bool) (Config, error) <span class="cov9" ti
 
         p := getPath(path)
 
+        // #nosec G304 -- Local users can decide on their file path themselves.
         f, err := os.ReadFile(p)
         if path == "" &amp;&amp; os.IsNotExist(err) </span><span class="cov2" title="2">{
                 slog.Info("No config file specified and default file does not exist, falling back to default values.", slog.String("default-path", p))
@@ -516,6 +517,7 @@ import (
         "net/http"
         "strconv"
         "strings"
+        "time"
 
         api "github.com/heathcliff26/go-wol/pkg/server/api/v1"
         "github.com/heathcliff26/go-wol/pkg/server/config"
@@ -574,8 +576,9 @@ func (s *Server) Run() error <span class="cov5" title="2">{
         router.Handle("GET /js/", assetFS)
 
         server := http.Server{
-                Addr:    s.addr,
-                Handler: middleware.Logging(router),
+                Addr:        s.addr,
+                Handler:     middleware.Logging(router),
+                ReadTimeout: 10 * time.Second,
         }
 
         var err error
@@ -807,11 +810,12 @@ func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title
 
 // Check if the storage backend is readonly
 func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="13">{
+        //#nosec G302 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
         f, err := os.OpenFile(fb.path, os.O_RDWR, 0644)
         if err != nil </span><span class="cov1" title="2">{
                 return true, nil
         }</span>
-        <span class="cov3" title="11">f.Close()
+        <span class="cov3" title="11">_ = f.Close()
         return false, nil</span>
 }
 
@@ -821,6 +825,7 @@ func (fb *FileBackend) save() error <span class="cov6" title="183">{
                 return fmt.Errorf("failed to marshal storage data: %w", err)
         }</span>
 
+        // #nosec G306 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
         <span class="cov6" title="183">err = os.WriteFile(fb.path, data, 0644)
         if err != nil </span><span class="cov2" title="3">{
                 return fmt.Errorf("failed to write storage file: %w", err)
@@ -1283,7 +1288,9 @@ func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov
         var tlsConfig *tls.Config
 
         if cfg.TLS </span><span class="cov0" title="0">{
-                tlsConfig = &amp;tls.Config{}
+                tlsConfig = &amp;tls.Config{
+                        MinVersion: tls.VersionTLS12,
+                }
         }</span>
 
         <span class="cov5" title="19">opt := valkey.ClientOption{
