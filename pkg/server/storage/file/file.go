@@ -133,11 +133,12 @@ func (fb *FileBackend) GetHosts() ([]types.Host, error) {
 
 // Check if the storage backend is readonly
 func (fb *FileBackend) Readonly() (bool, error) {
+	//#nosec G302 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
 	f, err := os.OpenFile(fb.path, os.O_RDWR, 0644)
 	if err != nil {
 		return true, nil
 	}
-	f.Close()
+	_ = f.Close()
 	return false, nil
 }
 
@@ -147,6 +148,7 @@ func (fb *FileBackend) save() error {
 		return fmt.Errorf("failed to marshal storage data: %w", err)
 	}
 
+	// #nosec G306 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
 	err = os.WriteFile(fb.path, data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write storage file: %w", err)

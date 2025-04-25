@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	api "github.com/heathcliff26/go-wol/pkg/server/api/v1"
 	"github.com/heathcliff26/go-wol/pkg/server/config"
@@ -65,8 +66,9 @@ func (s *Server) Run() error {
 	router.Handle("GET /js/", assetFS)
 
 	server := http.Server{
-		Addr:    s.addr,
-		Handler: middleware.Logging(router),
+		Addr:        s.addr,
+		Handler:     middleware.Logging(router),
+		ReadTimeout: 10 * time.Second,
 	}
 
 	var err error
