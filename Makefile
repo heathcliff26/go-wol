@@ -34,6 +34,9 @@ validate:
 generate-bootstrap:
 	hack/generate-bootstrap.sh
 
+gosec:
+	gosec ./...
+
 clean:
 	rm -rf bin coverprofiles coverprofile.out
 
@@ -49,6 +52,7 @@ help:
 	@echo "  fmt                 Format the code"
 	@echo "  validate            Validate the project"
 	@echo "  generate-bootstrap  Generate bootstrap files"
+	@echo "  gosec               Scan code for vulnerabilities using gosec"
 	@echo "  clean               Clean up generated files"
 
 .PHONY: \
@@ -62,6 +66,7 @@ help:
 	fmt \
 	validate \
 	generate-bootstrap \
+	gosec \
 	clean \
 	help \
 	$(NULL)
