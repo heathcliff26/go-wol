@@ -4,56 +4,47 @@ REPOSITORY ?= localhost
 CONTAINER_NAME ?= go-wol
 TAG ?= latest
 
-build:
+build: ## Build the binary
 	hack/build.sh
 
-run: build
+run: build ## Run the server on port 8080 to quickly test changes
 	bin/go-wol server --log debug
 
-image:
+image: ## Build the container image
 	podman build -t $(REPOSITORY)/$(CONTAINER_NAME):$(TAG) .
 
-test:
+test: ## Run unit-tests with race detection and coverage
 	go test -v -race -coverprofile=coverprofile.out -coverpkg "./..." ./...
 
-update-deps:
+update-deps: ## Update project dependencies
 	hack/update-deps.sh
 
-coverprofile:
+coverprofile: ## Generate coverage profile
 	hack/coverprofile.sh
 
-lint:
+lint: ## Run linter
 	golangci-lint run -v
 
-fmt:
+fmt: ## Format the code
 	gofmt -s -w ./cmd ./pkg
 
-validate:
+validate: ## Validate that all generated files are up to date.
 	hack/validate.sh
 
-generate-bootstrap:
+generate-bootstrap: ## Generate the bootstrap.css file
 	hack/generate-bootstrap.sh
 
-gosec:
+gosec: ## Scan code for vulnerabilities using gosec
 	gosec ./...
 
-clean:
+clean: ## Clean up generated files
 	rm -rf bin coverprofiles coverprofile.out
 
-help:
+help: ## Show this help message
 	@echo "Available targets:"
-	@echo "  build               Build the project"
-	@echo "  run                 Build and run the server"
-	@echo "  image               Build the container image"
-	@echo "  test                Run tests with coverage"
-	@echo "  update-deps         Update project dependencies"
-	@echo "  coverprofile        Generate coverage profile"
-	@echo "  lint                Run linter"
-	@echo "  fmt                 Format the code"
-	@echo "  validate            Validate the project"
-	@echo "  generate-bootstrap  Generate bootstrap files"
-	@echo "  gosec               Scan code for vulnerabilities using gosec"
-	@echo "  clean               Clean up generated files"
+	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "%-20s %s\n", $$1, $$2}'
+	@echo ""
+	@echo "Run 'make <target>' to execute a specific target."
 
 .PHONY: \
 	build \
