@@ -14,7 +14,7 @@ github.com/alicebob/miniredis/v2/size
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/heathcliff26/simple-fileserver v1.2.4
+# github.com/heathcliff26/simple-fileserver v1.2.5
 ## explicit; go 1.24.0
 github.com/heathcliff26/simple-fileserver/pkg/filesystem
 github.com/heathcliff26/simple-fileserver/pkg/middleware
@@ -39,7 +39,7 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
-# github.com/valkey-io/valkey-go v1.0.59
+# github.com/valkey-io/valkey-go v1.0.60
 ## explicit; go 1.23.0
 github.com/valkey-io/valkey-go
 github.com/valkey-io/valkey-go/internal/cmds
