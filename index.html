@@ -75,7 +75,7 @@
 				
 				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (97.2%)</option>
 				
-				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (87.7%)</option>
+				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (88.9%)</option>
 				
 				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
 				
@@ -675,10 +675,11 @@ const (
 )
 
 type StorageConfig struct {
-        Type     string                 `json:"type"`
-        Readonly bool                   `json:"readonly,omitempty"`
-        File     file.FileBackendConfig `json:"file,omitempty"`
-        Valkey   valkey.ValkeyConfig    `json:"valkey,omitempty"`
+        Type        string                 `json:"type"`
+        Readonly    bool                   `json:"readonly,omitempty"`
+        SeededHosts string                 `json:"seeded-hosts,omitempty"`
+        File        file.FileBackendConfig `json:"file,omitempty"`
+        Valkey      valkey.ValkeyConfig    `json:"valkey,omitempty"`
 }
 
 func NewDefaultStorageConfig() StorageConfig <span class="cov10" title="24">{
@@ -722,30 +723,26 @@ import (
 
 type FileBackend struct {
         path    string
-        storage *fileStorage
+        storage *types.HostsFile
         lock    sync.RWMutex
 }
 
-type fileStorage struct {
-        Hosts []types.Host `json:"hosts"`
-}
-
-func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="34">{
+func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="38">{
         fb := &amp;FileBackend{
                 path: cfg.Path,
-                storage: &amp;fileStorage{
+                storage: &amp;types.HostsFile{
                         Hosts: []types.Host{},
                 },
         }
 
         f, err := os.ReadFile(cfg.Path)
-        if os.IsNotExist(err) </span><span class="cov4" title="23">{
+        if os.IsNotExist(err) </span><span class="cov4" title="27">{
                 slog.Info("File not found, creating new file", slog.String("path", cfg.Path))
                 err := fb.save()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to create new storage file: %w", err)
                 }</span>
-                <span class="cov4" title="23">return fb, nil</span>
+                <span class="cov4" title="27">return fb, nil</span>
         } else<span class="cov3" title="11"> if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to read storage file: %w", err)
         }</span>
@@ -787,19 +784,19 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="co
 
 // Add a new host, overwrite existing host name if it already exists.
 // Ensures that the MAC address is unique and uppercase.
-func (fb *FileBackend) AddHost(mac string, name string) error <span class="cov6" title="152">{
+func (fb *FileBackend) AddHost(mac string, name string) error <span class="cov6" title="154">{
         fb.lock.Lock()
         defer fb.lock.Unlock()
 
         uppercaseMAC := strings.ToUpper(mac)
-        for i, host := range fb.storage.Hosts </span><span class="cov10" title="5042">{
+        for i, host := range fb.storage.Hosts </span><span class="cov10" title="5043">{
                 if host.MAC == uppercaseMAC </span><span class="cov1" title="2">{
                         fb.storage.Hosts[i].Name = name
                         return fb.save()
                 }</span>
         }
 
-        <span class="cov6" title="150">fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
+        <span class="cov6" title="152">fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
         return fb.save()</span>
 }
 
@@ -833,7 +830,7 @@ func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" ti
 }
 
 // Return all hosts
-func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="118">{
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="120">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
@@ -841,29 +838,29 @@ func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title
 }</span>
 
 // Check if the storage backend is readonly
-func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="13">{
+func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="16">{
         //#nosec G302 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
         f, err := os.OpenFile(fb.path, os.O_RDWR, 0644)
         if err != nil </span><span class="cov1" title="2">{
                 return true, nil
         }</span>
-        <span class="cov3" title="11">_ = f.Close()
+        <span class="cov3" title="14">_ = f.Close()
         return false, nil</span>
 }
 
-func (fb *FileBackend) save() error <span class="cov6" title="183">{
+func (fb *FileBackend) save() error <span class="cov6" title="189">{
         data, err := yaml.Marshal(fb.storage)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to marshal storage data: %w", err)
         }</span>
 
         // #nosec G306 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
-        <span class="cov6" title="183">err = os.WriteFile(fb.path, data, 0644)
+        <span class="cov6" title="189">err = os.WriteFile(fb.path, data, 0644)
         if err != nil </span><span class="cov2" title="3">{
                 return fmt.Errorf("failed to write storage file: %w", err)
         }</span>
 
-        <span class="cov6" title="180">slog.Debug("Storage file saved", slog.String("path", fb.path))
+        <span class="cov6" title="186">slog.Debug("Storage file saved", slog.String("path", fb.path))
         return nil</span>
 }
 </pre>
@@ -876,6 +873,8 @@ import (
         "encoding/hex"
         "fmt"
         "html/template"
+        "log/slog"
+        "os"
         "sync"
 
         "github.com/heathcliff26/go-wol/pkg/server/storage/file"
@@ -883,6 +882,8 @@ import (
         "github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
         "github.com/heathcliff26/go-wol/pkg/version"
         "github.com/heathcliff26/go-wol/static"
+
+        "sigs.k8s.io/yaml"
 )
 
 type Storage struct {
@@ -894,39 +895,63 @@ type Storage struct {
         indexChecksum string
 }
 
-func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov9" title="16">{
+func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="20">{
         var backend types.StorageBackend
         var err error
         switch cfg.Type </span>{
-        case "file":<span class="cov8" title="12">
+        case "file":<span class="cov9" title="16">
                 backend, err = file.NewFileBackend(cfg.File)</span>
         case "valkey":<span class="cov4" title="3">
                 backend, err = valkey.NewValkeyBackend(cfg.Valkey)</span>
         default:<span class="cov1" title="1">
                 return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)</span>
         }
-        <span class="cov9" title="15">if err != nil </span><span class="cov3" title="2">{
+        <span class="cov9" title="19">if err != nil </span><span class="cov3" title="2">{
                 return nil, fmt.Errorf("failed to create storage backend: %w", err)
         }</span>
 
-        <span class="cov9" title="13">s := &amp;Storage{
+        <span class="cov9" title="17">s := &amp;Storage{
                 backend:  backend,
                 readonly: cfg.Readonly,
         }
 
-        if !s.readonly </span><span class="cov8" title="12">{
+        if !s.readonly </span><span class="cov9" title="15">{
                 s.readonly, err = s.backend.Readonly()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
                 }</span>
         }
 
-        <span class="cov9" title="13">err = s.updateIndexHTML()
+        <span class="cov9" title="17">if cfg.SeededHosts != "" </span><span class="cov5" title="4">{
+                if s.readonly </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("cannot seed hosts in readonly mode")
+                }</span>
+
+                <span class="cov4" title="3">f, err := os.ReadFile(cfg.SeededHosts)
+                if err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to read seeded hosts file: %w", err)
+                }</span>
+                <span class="cov3" title="2">var seededHosts types.HostsFile
+                err = yaml.Unmarshal(f, &amp;seededHosts)
+                if err != nil </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("failed to unmarshal seeded hosts file: %w", err)
+                }</span>
+
+                <span class="cov1" title="1">for _, host := range seededHosts.Hosts </span><span class="cov3" title="2">{
+                        slog.Debug("Adding seeded host", "mac", host.MAC, "name", host.Name)
+                        err := s.backend.AddHost(host.MAC, host.Name)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return nil, fmt.Errorf("failed to add seeded host '%s': %w", host.MAC, err)
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="14">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to create index.html: %w", err)
         }</span>
 
-        <span class="cov9" title="13">return s, nil</span>
+        <span class="cov8" title="14">return s, nil</span>
 }
 
 type indexValues struct {
@@ -937,7 +962,7 @@ type indexValues struct {
 }
 
 // Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error <span class="cov10" title="17">{
+func (s *Storage) updateIndexHTML() error <span class="cov9" title="18">{
         s.indexLock.Lock()
         defer s.indexLock.Unlock()
 
@@ -946,7 +971,7 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="17">{
                 return fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov10" title="17">values := indexValues{
+        <span class="cov9" title="18">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
                 Version:  version.Version(),
@@ -958,12 +983,12 @@ func (s *Storage) updateIndexHTML() error <span class="cov10" title="17">{
                 return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
         }</span>
 
-        <span class="cov10" title="17">var buf bytes.Buffer
+        <span class="cov9" title="18">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, values)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to apply values to html template: %w", err)
         }</span>
-        <span class="cov10" title="17">indexHTML := buf.String()
+        <span class="cov9" title="18">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
@@ -1510,7 +1535,7 @@ func NewCommand() *cobra.Command <span class="cov3" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="30">{
+func Version() string <span class="cov10" title="31">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
