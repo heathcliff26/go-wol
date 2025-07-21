@@ -31,6 +31,8 @@ storage:
   # If the storage should be readonly.
   # If set to false, will check if the backend is writable on startup
   readonly: true
+  # Path to an optional hosts.yaml file to seed known hosts from on startup.
+  seeded-hosts: ""
   # The configuration for the file backend
   file:
     # The path to the hosts file. Will be created if it does not exist

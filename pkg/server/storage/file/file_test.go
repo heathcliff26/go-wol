@@ -103,7 +103,7 @@ func TestNewFileBackend(t *testing.T) {
 
 		f, err := os.ReadFile(path)
 		require.NoError(err, "Failed to read file")
-		fs := &fileStorage{}
+		fs := &types.HostsFile{}
 		require.NoError(yaml.Unmarshal(f, fs), "Failed to unmarshal file")
 		assert.Equal(basicTestHosts, fs.Hosts, "Should have written trimmed hosts array to file")
 	})

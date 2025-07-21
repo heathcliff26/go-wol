@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"html/template"
+	"log/slog"
+	"os"
 	"sync"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
@@ -13,6 +15,8 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
 	"github.com/heathcliff26/go-wol/pkg/version"
 	"github.com/heathcliff26/go-wol/static"
+
+	"sigs.k8s.io/yaml"
 )
 
 type Storage struct {
@@ -48,6 +52,30 @@ func NewStorage(cfg StorageConfig) (*Storage, error) {
 		s.readonly, err = s.backend.Readonly()
 		if err != nil {
 			return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
+		}
+	}
+
+	if cfg.SeededHosts != "" {
+		if s.readonly {
+			return nil, fmt.Errorf("cannot seed hosts in readonly mode")
+		}
+
+		f, err := os.ReadFile(cfg.SeededHosts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read seeded hosts file: %w", err)
+		}
+		var seededHosts types.HostsFile
+		err = yaml.Unmarshal(f, &seededHosts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal seeded hosts file: %w", err)
+		}
+
+		for _, host := range seededHosts.Hosts {
+			slog.Debug("Adding seeded host", "mac", host.MAC, "name", host.Name)
+			err := s.backend.AddHost(host.MAC, host.Name)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add seeded host '%s': %w", host.MAC, err)
+			}
 		}
 	}
 

@@ -13,18 +13,14 @@ import (
 
 type FileBackend struct {
 	path    string
-	storage *fileStorage
+	storage *types.HostsFile
 	lock    sync.RWMutex
-}
-
-type fileStorage struct {
-	Hosts []types.Host `json:"hosts"`
 }
 
 func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) {
 	fb := &FileBackend{
 		path: cfg.Path,
-		storage: &fileStorage{
+		storage: &types.HostsFile{
 			Hosts: []types.Host{},
 		},
 	}
