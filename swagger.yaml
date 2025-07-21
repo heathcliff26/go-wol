@@ -36,6 +36,10 @@ paths:
           description: Invalid MAC address
           schema:
             $ref: '#/definitions/v1.Response'
+        "403":
+          description: Storage is readonly
+          schema:
+            $ref: '#/definitions/v1.Response'
         "500":
           description: Failed to remove host
           schema:
@@ -64,6 +68,10 @@ paths:
             $ref: '#/definitions/v1.Response'
         "400":
           description: Invalid MAC address or hostname
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "403":
+          description: Storage is readonly
           schema:
             $ref: '#/definitions/v1.Response'
         "500":

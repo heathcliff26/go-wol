@@ -81,11 +81,19 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 // @Param			name	path		string		true	"Name of the host"
 // @Success		200		{object}	Response	"ok"
 // @Failure		400		{object}	Response	"Invalid MAC address or hostname"
+// @Failure		403		{object}	Response	"Storage is readonly"
 // @Failure		500		{object}	Response	"Failed to add host"
 // @Router			/hosts/{macAddr}/{name} [put]
 func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 	name := req.PathValue("name")
+
+	if h.storage.Readonly() {
+		slog.Debug("Client tried to add host while storage is readonly")
+		res.WriteHeader(http.StatusForbidden)
+		sendResponse(res, "Storage is readonly")
+		return
+	}
 
 	if !utils.ValidateMACAddress(macAddr) {
 		slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
@@ -120,10 +128,18 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 // @Param			macAddr	path		string		true	"MAC address of the host"
 // @Success		200		{object}	Response	"ok"
 // @Failure		400		{object}	Response	"Invalid MAC address"
+// @Failure		403		{object}	Response	"Storage is readonly"
 // @Failure		500		{object}	Response	"Failed to remove host"
 // @Router			/hosts/{macAddr} [delete]
 func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
+
+	if h.storage.Readonly() {
+		slog.Debug("Client tried to remove host while storage is readonly")
+		res.WriteHeader(http.StatusForbidden)
+		sendResponse(res, "Storage is readonly")
+		return
+	}
 
 	if !utils.ValidateMACAddress(macAddr) {
 		slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
