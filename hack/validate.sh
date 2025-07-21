@@ -22,6 +22,15 @@ if [ $rc -ne 0 ]; then
     exit 1
 fi
 
+echo "Check if the swagger docs are generated"
+make generate-swagger
+rc=0
+git update-index --refresh && git diff-index --quiet HEAD -- || rc=1
+if [ $rc -ne 0 ]; then
+    echo "FATAL: Need to run \"make generate-swagger\""
+    exit 1
+fi
+
 echo "All files are up to date"
 
 if grep "/bootstrap/" "${base_dir}/static/index.html"; then

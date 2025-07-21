@@ -40,9 +40,16 @@ fmt:
 validate:
 	hack/validate.sh
 
+# Generate all required files
+generate: generate-bootstrap generate-swagger
+
 # Generate the bootstrap.css file
 generate-bootstrap:
 	hack/generate-bootstrap.sh
+
+# Generate Swagger documentation
+generate-swagger:
+	hack/swagger.sh
 
 # Scan code for vulnerabilities using gosec
 gosec:
@@ -70,7 +77,9 @@ help:
 	lint \
 	fmt \
 	validate \
+	generate \
 	generate-bootstrap \
+	generate-swagger \
 	gosec \
 	clean \
 	help \
