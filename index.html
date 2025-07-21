@@ -59,7 +59,7 @@
 				
 				<option value="file1">github.com/heathcliff26/go-wol/cmd/main.go (75.0%)</option>
 				
-				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/v1/api.go (89.4%)</option>
+				<option value="file2">github.com/heathcliff26/go-wol/pkg/server/api/v1/api.go (90.8%)</option>
 				
 				<option value="file3">github.com/heathcliff26/go-wol/pkg/server/cmd.go (84.0%)</option>
 				
@@ -194,7 +194,7 @@ type apiHandler struct {
         storage *storage.Storage
 }
 
-func NewRouter(storage *storage.Storage) *http.ServeMux <span class="cov5" title="3">{
+func NewRouter(storage *storage.Storage) *http.ServeMux <span class="cov4" title="3">{
         handler := &amp;apiHandler{
                 storage: storage,
         }
@@ -215,7 +215,7 @@ func NewRouter(storage *storage.Storage) *http.ServeMux <span class="cov5" title
 // @Failure                400                {object}        Response        "Invalid MAC address"
 // @Failure                500                {object}        Response        "Failed to send magic packet"
 // @Router                        /wake/{macAddr} [get]
-func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov5" title="3">{
+func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov4" title="3">{
         macAddr := req.PathValue("macAddr")
 
         packet, err := wol.CreatePacket(macAddr)
@@ -246,20 +246,28 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov5" 
 // @Param                        name        path                string                true        "Name of the host"
 // @Success                200                {object}        Response        "ok"
 // @Failure                400                {object}        Response        "Invalid MAC address or hostname"
+// @Failure                403                {object}        Response        "Storage is readonly"
 // @Failure                500                {object}        Response        "Failed to add host"
 // @Router                        /hosts/{macAddr}/{name} [put]
-func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" title="4">{
+func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" title="5">{
         macAddr := req.PathValue("macAddr")
         name := req.PathValue("name")
 
-        if !utils.ValidateMACAddress(macAddr) </span><span class="cov1" title="1">{
+        if h.storage.Readonly() </span><span class="cov1" title="1">{
+                slog.Debug("Client tried to add host while storage is readonly")
+                res.WriteHeader(http.StatusForbidden)
+                sendResponse(res, "Storage is readonly")
+                return
+        }</span>
+
+        <span class="cov6" title="4">if !utils.ValidateMACAddress(macAddr) </span><span class="cov1" title="1">{
                 slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Invalid MAC address")
                 return
         }</span>
 
-        <span class="cov5" title="3">if !utils.ValidateHostname(name) </span><span class="cov1" title="1">{
+        <span class="cov4" title="3">if !utils.ValidateHostname(name) </span><span class="cov1" title="1">{
                 slog.Debug("Client send invalid hostname", slog.String("name", name))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Invalid hostname")
@@ -285,12 +293,20 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 // @Param                        macAddr        path                string                true        "MAC address of the host"
 // @Success                200                {object}        Response        "ok"
 // @Failure                400                {object}        Response        "Invalid MAC address"
+// @Failure                403                {object}        Response        "Storage is readonly"
 // @Failure                500                {object}        Response        "Failed to remove host"
 // @Router                        /hosts/{macAddr} [delete]
-func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov5" title="3">{
+func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Request) <span class="cov6" title="4">{
         macAddr := req.PathValue("macAddr")
 
-        if !utils.ValidateMACAddress(macAddr) </span><span class="cov1" title="1">{
+        if h.storage.Readonly() </span><span class="cov1" title="1">{
+                slog.Debug("Client tried to remove host while storage is readonly")
+                res.WriteHeader(http.StatusForbidden)
+                sendResponse(res, "Storage is readonly")
+                return
+        }</span>
+
+        <span class="cov4" title="3">if !utils.ValidateMACAddress(macAddr) </span><span class="cov1" title="1">{
                 slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
                 res.WriteHeader(http.StatusBadRequest)
                 sendResponse(res, "Invalid MAC address")
@@ -309,22 +325,22 @@ func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Reques
         sendResponse(res, "")</span>
 }
 
-func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="10">{
+func sendResponse(rw http.ResponseWriter, reason string) <span class="cov10" title="12">{
         response := Response{
                 Status: "error",
                 Reason: reason,
         }
-        if reason == "" </span><span class="cov5" title="3">{
+        if reason == "" </span><span class="cov4" title="3">{
                 response.Status = "ok"
         }</span>
 
-        <span class="cov10" title="10">b, err := json.MarshalIndent(response, "", "  ")
+        <span class="cov10" title="12">b, err := json.MarshalIndent(response, "", "  ")
         if err != nil </span><span class="cov0" title="0">{
                 slog.Error("Failed to create Response", "err", err)
                 return
         }</span>
 
-        <span class="cov10" title="10">rw.Header().Set("Content-Type", "application/json")
+        <span class="cov10" title="12">rw.Header().Set("Content-Type", "application/json")
 
         _, err = rw.Write(b)
         if err != nil </span><span class="cov0" title="0">{
@@ -727,7 +743,7 @@ type FileBackend struct {
         lock    sync.RWMutex
 }
 
-func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="38">{
+func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="cov4" title="40">{
         fb := &amp;FileBackend{
                 path: cfg.Path,
                 storage: &amp;types.HostsFile{
@@ -736,13 +752,13 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) <span class="co
         }
 
         f, err := os.ReadFile(cfg.Path)
-        if os.IsNotExist(err) </span><span class="cov4" title="27">{
+        if os.IsNotExist(err) </span><span class="cov4" title="29">{
                 slog.Info("File not found, creating new file", slog.String("path", cfg.Path))
                 err := fb.save()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to create new storage file: %w", err)
                 }</span>
-                <span class="cov4" title="27">return fb, nil</span>
+                <span class="cov4" title="29">return fb, nil</span>
         } else<span class="cov3" title="11"> if err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to read storage file: %w", err)
         }</span>
@@ -830,7 +846,7 @@ func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" ti
 }
 
 // Return all hosts
-func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="120">{
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="122">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
@@ -848,19 +864,19 @@ func (fb *FileBackend) Readonly() (bool, error) <span class="cov3" title="16">{
         return false, nil</span>
 }
 
-func (fb *FileBackend) save() error <span class="cov6" title="189">{
+func (fb *FileBackend) save() error <span class="cov6" title="191">{
         data, err := yaml.Marshal(fb.storage)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to marshal storage data: %w", err)
         }</span>
 
         // #nosec G306 -- The file does not contain sensitive data, so it can be world readable. Additionally final permissions are determined by the umask.
-        <span class="cov6" title="189">err = os.WriteFile(fb.path, data, 0644)
+        <span class="cov6" title="191">err = os.WriteFile(fb.path, data, 0644)
         if err != nil </span><span class="cov2" title="3">{
                 return fmt.Errorf("failed to write storage file: %w", err)
         }</span>
 
-        <span class="cov6" title="186">slog.Debug("Storage file saved", slog.String("path", fb.path))
+        <span class="cov6" title="188">slog.Debug("Storage file saved", slog.String("path", fb.path))
         return nil</span>
 }
 </pre>
@@ -895,34 +911,34 @@ type Storage struct {
         indexChecksum string
 }
 
-func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="20">{
+func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="22">{
         var backend types.StorageBackend
         var err error
         switch cfg.Type </span>{
-        case "file":<span class="cov9" title="16">
+        case "file":<span class="cov9" title="18">
                 backend, err = file.NewFileBackend(cfg.File)</span>
         case "valkey":<span class="cov4" title="3">
                 backend, err = valkey.NewValkeyBackend(cfg.Valkey)</span>
         default:<span class="cov1" title="1">
                 return nil, fmt.Errorf("unknown storage backend type: %s", cfg.Type)</span>
         }
-        <span class="cov9" title="19">if err != nil </span><span class="cov3" title="2">{
+        <span class="cov9" title="21">if err != nil </span><span class="cov3" title="2">{
                 return nil, fmt.Errorf("failed to create storage backend: %w", err)
         }</span>
 
-        <span class="cov9" title="17">s := &amp;Storage{
+        <span class="cov9" title="19">s := &amp;Storage{
                 backend:  backend,
                 readonly: cfg.Readonly,
         }
 
-        if !s.readonly </span><span class="cov9" title="15">{
+        if !s.readonly </span><span class="cov8" title="15">{
                 s.readonly, err = s.backend.Readonly()
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, fmt.Errorf("failed to check if storage backend is readonly: %w", err)
                 }</span>
         }
 
-        <span class="cov9" title="17">if cfg.SeededHosts != "" </span><span class="cov5" title="4">{
+        <span class="cov9" title="19">if cfg.SeededHosts != "" </span><span class="cov5" title="4">{
                 if s.readonly </span><span class="cov1" title="1">{
                         return nil, fmt.Errorf("cannot seed hosts in readonly mode")
                 }</span>
@@ -946,12 +962,12 @@ func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="
                 }
         }
 
-        <span class="cov8" title="14">err = s.updateIndexHTML()
+        <span class="cov9" title="16">err = s.updateIndexHTML()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to create index.html: %w", err)
         }</span>
 
-        <span class="cov8" title="14">return s, nil</span>
+        <span class="cov9" title="16">return s, nil</span>
 }
 
 type indexValues struct {
@@ -962,7 +978,7 @@ type indexValues struct {
 }
 
 // Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error <span class="cov9" title="18">{
+func (s *Storage) updateIndexHTML() error <span class="cov9" title="20">{
         s.indexLock.Lock()
         defer s.indexLock.Unlock()
 
@@ -971,7 +987,7 @@ func (s *Storage) updateIndexHTML() error <span class="cov9" title="18">{
                 return fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov9" title="18">values := indexValues{
+        <span class="cov9" title="20">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
                 Version:  version.Version(),
@@ -983,12 +999,12 @@ func (s *Storage) updateIndexHTML() error <span class="cov9" title="18">{
                 return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
         }</span>
 
-        <span class="cov9" title="18">var buf bytes.Buffer
+        <span class="cov9" title="20">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, values)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to apply values to html template: %w", err)
         }</span>
-        <span class="cov9" title="18">indexHTML := buf.String()
+        <span class="cov9" title="20">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
@@ -1007,7 +1023,7 @@ func (s *Storage) GetIndexHTML() (string, string) <span class="cov6" title="6">{
 }</span>
 
 // Return if the storage is readonly
-func (s *Storage) Readonly() bool <span class="cov5" title="4">{
+func (s *Storage) Readonly() bool <span class="cov8" title="13">{
         return s.readonly
 }</span>
 
@@ -1535,7 +1551,7 @@ func NewCommand() *cobra.Command <span class="cov3" title="3">{
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="31">{
+func Version() string <span class="cov10" title="33">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
