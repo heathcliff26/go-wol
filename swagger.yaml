@@ -1,0 +1,101 @@
+basePath: /api/v1
+definitions:
+  v1.Response:
+    properties:
+      reason:
+        type: string
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Manage known hosts and send magic packets.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: go-wol API
+  version: "1.0"
+paths:
+  /hosts/{macAddr}:
+    delete:
+      description: Remove a host from the list of known hosts
+      parameters:
+      - description: MAC address of the host
+        in: path
+        name: macAddr
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "400":
+          description: Invalid MAC address
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "500":
+          description: Failed to remove host
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Remove host
+  /hosts/{macAddr}/{name}:
+    put:
+      description: Add a new host to the known hosts
+      parameters:
+      - description: MAC address of the host
+        in: path
+        name: macAddr
+        required: true
+        type: string
+      - description: Name of the host
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "400":
+          description: Invalid MAC address or hostname
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "500":
+          description: Failed to add host
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Add new host
+  /wake/{macAddr}:
+    get:
+      description: Send a magic packet to the specified MAC address
+      parameters:
+      - description: MAC address of the host
+        in: path
+        name: macAddr
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "400":
+          description: Invalid MAC address
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "500":
+          description: Failed to send magic packet
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Wake up host
+produces:
+- application/json
+swagger: "2.0"

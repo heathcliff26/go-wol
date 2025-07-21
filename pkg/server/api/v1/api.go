@@ -1,5 +1,15 @@
 package v1
 
+//	@title			go-wol API
+//	@version		1.0
+//	@description	Manage known hosts and send magic packets.
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@BasePath	/api/v1
+//	@produce	json
+
 import (
 	"encoding/json"
 	"log/slog"
@@ -31,8 +41,15 @@ func NewRouter(storage *storage.Storage) *http.ServeMux {
 	return router
 }
 
-// GET /wake/{macAddr}
-// Send a magic packet to the specified MAC address
+// @Summary		Wake up host
+// @Description	Send a magic packet to the specified MAC address
+//
+// @Produce		json
+// @Param			macAddr	path		string		true	"MAC address of the host"
+// @Success		200		{object}	Response	"ok"
+// @Failure		400		{object}	Response	"Invalid MAC address"
+// @Failure		500		{object}	Response	"Failed to send magic packet"
+// @Router			/wake/{macAddr} [get]
 func WakeHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 
@@ -47,7 +64,7 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 	err = packet.Send("")
 	if err != nil {
 		slog.Info("Failed to send magic packet", slog.String("mac", macAddr), slog.Any("error", err))
-		res.WriteHeader(http.StatusBadRequest)
+		res.WriteHeader(http.StatusInternalServerError)
 		sendResponse(res, "Failed to send magic packet")
 		return
 	}
@@ -56,8 +73,16 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 	sendResponse(res, "")
 }
 
-// PUT /hosts/{macAddr}/{name}
-// Add a host to the storage
+// @Summary		Add new host
+// @Description	Add a new host to the known hosts
+//
+// @Produce		json
+// @Param			macAddr	path		string		true	"MAC address of the host"
+// @Param			name	path		string		true	"Name of the host"
+// @Success		200		{object}	Response	"ok"
+// @Failure		400		{object}	Response	"Invalid MAC address or hostname"
+// @Failure		500		{object}	Response	"Failed to add host"
+// @Router			/hosts/{macAddr}/{name} [put]
 func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 	name := req.PathValue("name")
@@ -88,8 +113,15 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 	sendResponse(res, "")
 }
 
-// DELETE /hosts/{macAddr}
-// Remove a host from the storage
+// @Summary		Remove host
+// @Description	Remove a host from the list of known hosts
+//
+// @Produce		json
+// @Param			macAddr	path		string		true	"MAC address of the host"
+// @Success		200		{object}	Response	"ok"
+// @Failure		400		{object}	Response	"Invalid MAC address"
+// @Failure		500		{object}	Response	"Failed to remove host"
+// @Router			/hosts/{macAddr} [delete]
 func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Request) {
 	macAddr := req.PathValue("macAddr")
 
