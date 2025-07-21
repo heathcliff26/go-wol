@@ -64,6 +64,7 @@ func TestWakeHandler(t *testing.T) {
 func TestAddHostHandler(t *testing.T) {
 	tMatrix := []struct {
 		Name, MAC, Host string
+		Readonly        bool
 		Status          int
 		Response        Response
 	}{
@@ -96,6 +97,17 @@ func TestAddHostHandler(t *testing.T) {
 				Reason: "Invalid hostname",
 			},
 		},
+		{
+			Name:     "ReadonlyStorage",
+			MAC:      "00:11:22:33:44:55",
+			Host:     "TestHost",
+			Readonly: true,
+			Status:   http.StatusForbidden,
+			Response: Response{
+				Status: "error",
+				Reason: "Storage is readonly",
+			},
+		},
 	}
 
 	tmpDir := t.TempDir()
@@ -109,6 +121,7 @@ func TestAddHostHandler(t *testing.T) {
 				File: file.FileBackendConfig{
 					Path: tmpDir + "/" + tCase.Name + "-hosts.yaml",
 				},
+				Readonly: tCase.Readonly,
 			}
 			storageBackend, err := storage.NewStorage(cfg)
 			require.NoError(t, err, "Should create file backend without error")
@@ -136,6 +149,7 @@ func TestAddHostHandler(t *testing.T) {
 func TestRemoveHostHandler(t *testing.T) {
 	tMatrix := []struct {
 		Name, MAC string
+		Readonly  bool
 		Status    int
 		Response  Response
 	}{
@@ -156,6 +170,16 @@ func TestRemoveHostHandler(t *testing.T) {
 				Reason: "Invalid MAC address",
 			},
 		},
+		{
+			Name:     "ReadonlyStorage",
+			MAC:      "00:11:22:33:44:55",
+			Readonly: true,
+			Status:   http.StatusForbidden,
+			Response: Response{
+				Status: "error",
+				Reason: "Storage is readonly",
+			},
+		},
 	}
 
 	tmpDir := t.TempDir()
@@ -169,6 +193,7 @@ func TestRemoveHostHandler(t *testing.T) {
 				File: file.FileBackendConfig{
 					Path: tmpDir + "/" + tCase.Name + "-hosts.yaml",
 				},
+				Readonly: tCase.Readonly,
 			}
 			storageBackend, err := storage.NewStorage(cfg)
 			require.NoError(t, err, "Should create file backend without error")
