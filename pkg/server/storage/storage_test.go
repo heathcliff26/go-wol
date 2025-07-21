@@ -136,6 +136,75 @@ func TestNewStorage(t *testing.T) {
 
 		assert.True(s.Readonly(), "Should ignore config if backend is readonly")
 	})
+
+	t.Run("SeededStorageReadonly", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: t.TempDir() + "/test.yaml",
+			},
+			Readonly:    true,
+			SeededHosts: "file/testdata/basic.yaml",
+		}
+
+		s, err := NewStorage(cfg)
+		assert.Nil(s, "Storage should be nil")
+		assert.Error(err, "Should return an error when trying to seed hosts in readonly mode")
+	})
+
+	t.Run("SeededMissingFile", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: t.TempDir() + "/test.yaml",
+			},
+			SeededHosts: "not-a-file.yaml",
+		}
+
+		s, err := NewStorage(cfg)
+		assert.Nil(s, "Storage should be nil")
+		assert.Error(err, "Should return an error when seed file is missing")
+	})
+
+	t.Run("SeededFileWrongFormat", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: t.TempDir() + "/test.yaml",
+			},
+			SeededHosts: "file/testdata/not-yaml.txt",
+		}
+
+		s, err := NewStorage(cfg)
+		assert.Nil(s, "Storage should be nil")
+		assert.Error(err, "Should return an error when seed file is not yaml")
+	})
+
+	t.Run("Seeded", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: t.TempDir() + "/test.yaml",
+			},
+			SeededHosts: "file/testdata/basic.yaml",
+		}
+
+		s, err := NewStorage(cfg)
+		assert.NotNil(s, "Storage should not be nil")
+		assert.NoError(err, "Should create storage")
+
+		hosts, err := s.backend.GetHosts()
+		assert.NoError(err, "Should get hosts without error")
+		assert.Len(hosts, 2, "Should have 2 hosts from seeding")
+	})
 }
 
 func TestStorageGetIndexHTML(t *testing.T) {

@@ -1,5 +1,6 @@
 package types
 
+// Host on the network.
 type Host struct {
 	MAC  string `json:"mac"`
 	Name string `json:"name"`
@@ -18,4 +19,9 @@ type StorageBackend interface {
 	GetHosts() ([]Host, error)
 	// Check if the storage backend is readonly
 	Readonly() (bool, error)
+}
+
+// Struct for reading hosts from a yaml file.
+type HostsFile struct {
+	Hosts []Host `json:"hosts"`
 }
