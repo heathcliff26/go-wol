@@ -87,7 +87,10 @@ When changing the frontend, use the original bootstrap file `static/bootstrap/bo
 
 ## Credit
 
-For CSS bootrap is used: [Website](https://getbootstrap.com/) | [Github](https://github.com/twbs/bootstrap) | [Documentation](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+For CSS bootstrap is used: [Website](https://getbootstrap.com/) | [Github](https://github.com/twbs/bootstrap) | [Documentation](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+
 To trim the bootstrap file purgecss is used: [Website](https://purgecss.com/) | [Github](https://github.com/FullHuman/purgecss) | [Documentation](https://purgecss.com/getting-started.html)
+
 The favicon base is from bootstrap: [Power Button](https://icons.getbootstrap.com/icons/power/)
+
 For generating the different icons: [RealFaviconGenerator](https://realfavicongenerator.net/)
