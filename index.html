@@ -65,7 +65,7 @@
 				
 				<option value="file4">github.com/heathcliff26/go-wol/pkg/server/config/config.go (100.0%)</option>
 				
-				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/server.go (90.9%)</option>
+				<option value="file5">github.com/heathcliff26/go-wol/pkg/server/server.go (83.8%)</option>
 				
 				<option value="file6">github.com/heathcliff26/go-wol/pkg/server/static.go (100.0%)</option>
 				
@@ -75,7 +75,7 @@
 				
 				<option value="file9">github.com/heathcliff26/go-wol/pkg/server/storage/file/file.go (97.2%)</option>
 				
-				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (89.5%)</option>
+				<option value="file10">github.com/heathcliff26/go-wol/pkg/server/storage/storage.go (91.7%)</option>
 				
 				<option value="file11">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/basic.go (100.0%)</option>
 				
@@ -249,9 +249,9 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) <span class="cov4" 
 func (h *apiHandler) GetHostsHandler(res http.ResponseWriter, req *http.Request) <span class="cov3" title="2">{
         hosts, err := h.storage.GetHosts()
         if err != nil </span><span class="cov1" title="1">{
-                slog.Error("Failed fetch hosts", "error", err)
+                slog.Error("Failed to fetch hosts", "error", err)
                 res.WriteHeader(http.StatusInternalServerError)
-                sendResponse(res, "Failed to fetch host")
+                sendResponse(res, "Failed to fetch hosts")
                 return
         }</span>
 
@@ -619,8 +619,14 @@ func NewServer(cfgServer config.ServerConfig, cfgStorage storage.StorageConfig) 
 }
 
 func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) <span class="cov8" title="3">{
-        indexHTML, indexChecksum := s.storage.GetIndexHTML()
-        res.Header().Set("ETag", indexChecksum)
+        indexHTML, indexChecksum, err := s.storage.GetIndexHTML()
+        if err != nil </span><span class="cov0" title="0">{
+                slog.Error("Failed to get index.html", "err", err)
+                http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="3">res.Header().Set("ETag", indexChecksum)
         res.Header().Set("Cache-Control", "public, max-age=300")
 
         if match := req.Header.Get("If-None-Match"); match != "" </span><span class="cov1" title="1">{
@@ -871,7 +877,7 @@ func (fb *FileBackend) GetHost(mac string) (string, error) <span class="cov5" ti
 }
 
 // Return all hosts
-func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov6" title="124">{
+func (fb *FileBackend) GetHosts() ([]types.Host, error) <span class="cov5" title="111">{
         fb.lock.RLock()
         defer fb.lock.RUnlock()
 
@@ -916,7 +922,6 @@ import (
         "html/template"
         "log/slog"
         "os"
-        "sync"
 
         "github.com/heathcliff26/go-wol/pkg/server/storage/file"
         "github.com/heathcliff26/go-wol/pkg/server/storage/types"
@@ -930,10 +935,6 @@ import (
 type Storage struct {
         backend  types.StorageBackend
         readonly bool
-
-        indexLock     sync.RWMutex
-        indexHTML     string
-        indexChecksum string
 }
 
 func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="24">{
@@ -987,11 +988,6 @@ func NewStorage(cfg StorageConfig) (*Storage, error) <span class="cov10" title="
                 }
         }
 
-        <span class="cov9" title="18">err = s.updateIndexHTML()
-        if err != nil </span><span class="cov0" title="0">{
-                return nil, fmt.Errorf("failed to create index.html: %w", err)
-        }</span>
-
         <span class="cov9" title="18">return s, nil</span>
 }
 
@@ -1002,17 +998,15 @@ type indexValues struct {
         Name     string
 }
 
-// Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error <span class="cov9" title="22">{
-        s.indexLock.Lock()
-        defer s.indexLock.Unlock()
-
+// Generate the index.html file from the template and the current hosts.
+// Returns the generated HTML and its checksum.
+func (s *Storage) GetIndexHTML() (string, string, error) <span class="cov5" title="5">{
         hosts, err := s.backend.GetHosts()
         if err != nil </span><span class="cov0" title="0">{
-                return fmt.Errorf("failed to get hosts: %w", err)
+                return "", "", fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov9" title="22">values := indexValues{
+        <span class="cov5" title="5">values := indexValues{
                 Readonly: s.readonly,
                 Hosts:    hosts,
                 Version:  version.Version(),
@@ -1021,31 +1015,20 @@ func (s *Storage) updateIndexHTML() error <span class="cov9" title="22">{
 
         tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
         if err != nil </span><span class="cov0" title="0">{
-                return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
+                return "", "", fmt.Errorf("unexpected error when creating a template from static html: %w", err)
         }</span>
 
-        <span class="cov9" title="22">var buf bytes.Buffer
+        <span class="cov5" title="5">var buf bytes.Buffer
         err = tmpl.Execute(&amp;buf, values)
         if err != nil </span><span class="cov0" title="0">{
-                return fmt.Errorf("failed to apply values to html template: %w", err)
+                return "", "", fmt.Errorf("failed to apply values to html template: %w", err)
         }</span>
-        <span class="cov9" title="22">indexHTML := buf.String()
+        <span class="cov5" title="5">indexHTML := buf.String()
 
         checksum := sha256.Sum256([]byte(indexHTML))
 
-        s.indexHTML = indexHTML
-        s.indexChecksum = hex.EncodeToString(checksum[:])
-
-        return nil</span>
+        return indexHTML, hex.EncodeToString(checksum[:]), nil</span>
 }
-
-// Return the current index.html and its checksum
-func (s *Storage) GetIndexHTML() (string, string) <span class="cov6" title="6">{
-        s.indexLock.RLock()
-        defer s.indexLock.RUnlock()
-
-        return s.indexHTML, s.indexChecksum
-}</span>
 
 // Return if the storage is readonly
 func (s *Storage) Readonly() bool <span class="cov8" title="13">{
@@ -1072,11 +1055,6 @@ func (s *Storage) AddHost(mac, host string) error <span class="cov4" title="4">{
                 return fmt.Errorf("failed to add host: %w", err)
         }</span>
 
-        <span class="cov2" title="2">err = s.updateIndexHTML()
-        if err != nil </span><span class="cov0" title="0">{
-                return fmt.Errorf("failed to update index.html after adding host: %w", err)
-        }</span>
-
         <span class="cov2" title="2">return nil</span>
 }
 
@@ -1089,11 +1067,6 @@ func (s *Storage) RemoveHost(mac string) error <span class="cov4" title="4">{
         <span class="cov4" title="3">err := s.backend.RemoveHost(mac)
         if err != nil </span><span class="cov1" title="1">{
                 return fmt.Errorf("failed to remove host: %w", err)
-        }</span>
-
-        <span class="cov2" title="2">err = s.updateIndexHTML()
-        if err != nil </span><span class="cov0" title="0">{
-                return fmt.Errorf("failed to update index.html after removing host: %w", err)
         }</span>
 
         <span class="cov2" title="2">return nil</span>
@@ -1494,7 +1467,7 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" 
 }
 
 // Return all hosts
-func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="107">{
+func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="105">{
         cmdZrange := v.client.B().Zrange().Key(hostsListKey).Min("0").Max("-1").Build()
 
         ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
@@ -1505,7 +1478,7 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" titl
                 return nil, fmt.Errorf("failed to get hosts: %w", err)
         }</span>
 
-        <span class="cov7" title="106">hosts := make([]types.Host, len(vals))
+        <span class="cov7" title="104">hosts := make([]types.Host, len(vals))
         for i, val := range vals </span><span class="cov9" title="512">{
                 mac, err := val.ToString()
                 if err != nil </span><span class="cov0" title="0">{
@@ -1521,7 +1494,7 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" titl
                         Name: name,
                 }</span>
         }
-        <span class="cov7" title="106">return hosts, nil</span>
+        <span class="cov7" title="104">return hosts, nil</span>
 }
 
 // Check if the storage backend is readonly
@@ -1584,7 +1557,7 @@ import (
 const Name = "go-wol"
 
 // Create a new version command with the given app name
-func NewCommand() *cobra.Command <span class="cov3" title="3">{
+func NewCommand() *cobra.Command <span class="cov4" title="3">{
         cmd := &amp;cobra.Command{
                 Use:   "version",
                 Short: "Print version information and exit",
@@ -1593,13 +1566,13 @@ func NewCommand() *cobra.Command <span class="cov3" title="3">{
                 }</span>,
         }
         // Override to prevent parent function from running
-        <span class="cov3" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
+        <span class="cov4" title="3">cmd.PersistentPreRun = func(cmd *cobra.Command, args []string) </span>{<span class="cov0" title="0">}</span>
 
-        <span class="cov3" title="3">return cmd</span>
+        <span class="cov4" title="3">return cmd</span>
 }
 
 // Return the version string
-func Version() string <span class="cov10" title="35">{
+func Version() string <span class="cov10" title="18">{
         buildinfo, _ := debug.ReadBuildInfo()
         return buildinfo.Main.Version
 }</span>
@@ -1608,7 +1581,7 @@ func Version() string <span class="cov10" title="35">{
 func VersionInfoString() string <span class="cov1" title="1">{
         var commit string
         buildinfo, _ := debug.ReadBuildInfo()
-        for _, item := range buildinfo.Settings </span><span class="cov7" title="12">{
+        for _, item := range buildinfo.Settings </span><span class="cov8" title="12">{
                 if item.Key == "vcs.revision" </span><span class="cov0" title="0">{
                         commit = item.Value
                         break</span>
