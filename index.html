@@ -83,7 +83,7 @@
 				
 				<option value="file13">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (100.0%)</option>
 				
-				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (82.7%)</option>
+				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (85.0%)</option>
 				
 				<option value="file15">github.com/heathcliff26/go-wol/pkg/utils/utils.go (100.0%)</option>
 				
@@ -1340,6 +1340,8 @@ import (
 
 const hostsListKey = "hosts"
 
+const defaultTimeout = 5 * time.Second
+
 type ValkeyBackend struct {
         client valkey.Client
 }
@@ -1402,12 +1404,15 @@ func (v *ValkeyBackend) AddHost(mac string, host string) error <span class="cov8
         cmdAdd := v.client.B().Set().Key(mac).Value(host).Build()
         cmdZadd := v.client.B().Zadd().Key(hostsListKey).Nx().ScoreMember().ScoreMember(float64(time.Now().UnixNano()), mac).Build()
 
-        err := v.client.Do(context.Background(), cmdAdd).Error()
+        ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+        defer cancel()
+
+        err := v.client.Do(ctx, cmdAdd).Error()
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to set host: %w", err)
         }</span>
 
-        <span class="cov8" title="150">err = v.client.Do(context.Background(), cmdZadd).Error()
+        <span class="cov8" title="150">err = v.client.Do(ctx, cmdZadd).Error()
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to add host to list: %w", err)
         }</span>
@@ -1422,12 +1427,15 @@ func (v *ValkeyBackend) RemoveHost(mac string) error <span class="cov7" title="1
         cmdDel := v.client.B().Del().Key(mac).Build()
         cmdZrem := v.client.B().Zrem().Key(hostsListKey).Member(mac).Build()
 
-        err := v.client.Do(context.Background(), cmdZrem).Error()
+        ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+        defer cancel()
+
+        err := v.client.Do(ctx, cmdZrem).Error()
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to remove host from list: %w", err)
         }</span>
 
-        <span class="cov7" title="104">err = v.client.Do(context.Background(), cmdDel).Error()
+        <span class="cov7" title="104">err = v.client.Do(ctx, cmdDel).Error()
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("failed to delete host, but already removed host from list: %w", err)
         }</span>
@@ -1441,7 +1449,10 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" 
 
         cmdGet := v.client.B().Get().Key(mac).Build()
 
-        val, err := v.client.Do(context.Background(), cmdGet).ToString()
+        ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+        defer cancel()
+
+        val, err := v.client.Do(ctx, cmdGet).ToString()
         if err != nil </span><span class="cov2" title="3">{
                 return "", fmt.Errorf("failed to get host: %w", err)
         }</span>
@@ -1452,7 +1463,10 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" 
 func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" title="105">{
         cmdZrange := v.client.B().Zrange().Key(hostsListKey).Min("0").Max("-1").Build()
 
-        vals, err := v.client.Do(context.Background(), cmdZrange).ToArray()
+        ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+        defer cancel()
+
+        vals, err := v.client.Do(ctx, cmdZrange).ToArray()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to get hosts: %w", err)
         }</span>
