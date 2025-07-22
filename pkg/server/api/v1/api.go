@@ -84,9 +84,9 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 func (h *apiHandler) GetHostsHandler(res http.ResponseWriter, req *http.Request) {
 	hosts, err := h.storage.GetHosts()
 	if err != nil {
-		slog.Error("Failed fetch hosts", "error", err)
+		slog.Error("Failed to fetch hosts", "error", err)
 		res.WriteHeader(http.StatusInternalServerError)
-		sendResponse(res, "Failed to fetch host")
+		sendResponse(res, "Failed to fetch hosts")
 		return
 	}
 
