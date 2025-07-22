@@ -83,7 +83,7 @@
 				
 				<option value="file13">github.com/heathcliff26/go-wol/pkg/server/storage/testsuite/utils.go (100.0%)</option>
 				
-				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (86.7%)</option>
+				<option value="file14">github.com/heathcliff26/go-wol/pkg/server/storage/valkey/valkey.go (85.7%)</option>
 				
 				<option value="file15">github.com/heathcliff26/go-wol/pkg/utils/utils.go (100.0%)</option>
 				
@@ -1398,7 +1398,7 @@ func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) <span class="cov
                 return nil, fmt.Errorf("failed to connect to valkey server: %w", err)
         }</span>
 
-        <span class="cov4" title="17">return &amp;ValkeyBackend{
+        <span class="cov5" title="17">return &amp;ValkeyBackend{
                 client: client,
         }, nil</span>
 }
@@ -1451,7 +1451,7 @@ func (v *ValkeyBackend) RemoveHost(mac string) error <span class="cov7" title="1
 }
 
 // Return the host name for a given MAC address, return empty if not found
-func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" title="617">{
+func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov7" title="105">{
         mac = strings.ToUpper(mac)
 
         cmdGet := v.client.B().Get().Key(mac).Build()
@@ -1463,7 +1463,7 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) <span class="cov10" 
         if err != nil </span><span class="cov2" title="3">{
                 return "", fmt.Errorf("failed to get host: %w", err)
         }</span>
-        <span class="cov9" title="614">return val, nil</span>
+        <span class="cov7" title="102">return val, nil</span>
 }
 
 // Return all hosts
@@ -1473,32 +1473,38 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) <span class="cov7" titl
         ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
         defer cancel()
 
-        vals, err := v.client.Do(ctx, cmdZrange).ToArray()
+        macs, err := v.client.Do(ctx, cmdZrange).AsStrSlice()
         if err != nil </span><span class="cov1" title="1">{
-                return nil, fmt.Errorf("failed to get hosts: %w", err)
+                return nil, fmt.Errorf("failed to get known hosts list: %w", err)
         }</span>
 
-        <span class="cov7" title="104">hosts := make([]types.Host, len(vals))
-        for i, val := range vals </span><span class="cov9" title="512">{
-                mac, err := val.ToString()
-                if err != nil </span><span class="cov0" title="0">{
-                        return nil, fmt.Errorf("failed to convert response value to string: %w", err)
+        <span class="cov7" title="104">res, err := valkey.MGet(v.client, ctx, macs)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to get host names: %w", err)
+        }</span>
+
+        <span class="cov7" title="104">hosts := make([]types.Host, 0, len(macs))
+        for _, mac := range macs </span><span class="cov10" title="512">{
+                val, ok := res[mac]
+                if !ok </span><span class="cov0" title="0">{
+                        return nil, fmt.Errorf("MAC address '%s' is in list but no hostname is found", mac)
                 }</span>
 
-                <span class="cov9" title="512">name, err := v.GetHost(mac)
+                <span class="cov10" title="512">name, err := val.ToString()
                 if err != nil </span><span class="cov0" title="0">{
-                        return nil, fmt.Errorf("failed to get host name: %w", err)
+                        return nil, fmt.Errorf("failed to convert response hostname value to string: %w", err)
                 }</span>
-                <span class="cov9" title="512">hosts[i] = types.Host{
+
+                <span class="cov10" title="512">hosts = append(hosts, types.Host{
                         MAC:  mac,
                         Name: name,
-                }</span>
+                })</span>
         }
         <span class="cov7" title="104">return hosts, nil</span>
 }
 
 // Check if the storage backend is readonly
-func (v *ValkeyBackend) Readonly() (bool, error) <span class="cov1" title="2">{
+func (v *ValkeyBackend) Readonly() (bool, error) <span class="cov2" title="2">{
         // You can configure valkey to be readonly via ACL, or connect against a replica.
         // However i do not know how to reliably check if the connection is readonly.
         // Instead of hoping that no network error occurs on startup, we just default to assume we can write.
