@@ -36,6 +36,7 @@ func NewRouter(storage *storage.Storage) *http.ServeMux {
 
 	router := http.NewServeMux()
 	router.HandleFunc("GET /wake/{macAddr}", WakeHandler)
+	router.HandleFunc("GET /hosts", handler.GetHostsHandler)
 	router.HandleFunc("PUT /hosts/{macAddr}/{name}", handler.AddHostHandler)
 	router.HandleFunc("DELETE /hosts/{macAddr}", handler.RemoveHostHandler)
 	return router
@@ -71,6 +72,25 @@ func WakeHandler(res http.ResponseWriter, req *http.Request) {
 
 	slog.Info("Sent magic packet", slog.String("mac", macAddr))
 	sendResponse(res, "")
+}
+
+// @Summary		Get hosts
+// @Description	Fetch all known hosts
+//
+// @Produce		json
+// @Success		200	{object}	[]types.Host	"List of all known hosts"
+// @Failure		500	{object}	Response		"Failed to retrieve hosts from storage"
+// @Router			/hosts [get]
+func (h *apiHandler) GetHostsHandler(res http.ResponseWriter, req *http.Request) {
+	hosts, err := h.storage.GetHosts()
+	if err != nil {
+		slog.Error("Failed fetch hosts", "error", err)
+		res.WriteHeader(http.StatusInternalServerError)
+		sendResponse(res, "Failed to fetch host")
+		return
+	}
+
+	sendJSONResponse(res, hosts)
 }
 
 // @Summary		Add new host
@@ -169,7 +189,12 @@ func sendResponse(rw http.ResponseWriter, reason string) {
 		response.Status = "ok"
 	}
 
-	b, err := json.MarshalIndent(response, "", "  ")
+	sendJSONResponse(rw, response)
+}
+
+// Send an arbitrary JSON Object to the client
+func sendJSONResponse(rw http.ResponseWriter, data any) {
+	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		slog.Error("Failed to create Response", "err", err)
 		return

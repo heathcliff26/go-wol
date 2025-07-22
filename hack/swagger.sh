@@ -17,7 +17,7 @@ fi
 export swag="${base_dir}/bin/swag"
 
 echo "Generating Swagger documentation"
-"${swag}" init -g api.go --dir pkg/server/api/v1/ -o ./ --ot yaml
+"${swag}" init -g api.go --dir pkg/server/api/v1/,pkg/server/storage/ -o ./ --ot yaml
 
 echo ""
 

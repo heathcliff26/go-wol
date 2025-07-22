@@ -9,6 +9,10 @@ import (
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/valkey"
+
+	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,6 +63,66 @@ func TestWakeHandler(t *testing.T) {
 			assert.Equal(tCase.Response, res, "Response should match")
 		})
 	}
+}
+
+func TestGetHostsHandler(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		assert := assert.New(t)
+
+		cfg := storage.StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: "testdata/hosts.yaml",
+			},
+		}
+
+		storageBackend, err := storage.NewStorage(cfg)
+		require.NoError(t, err, "Should create file backend without error")
+
+		handler := &apiHandler{storage: storageBackend}
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /hosts", handler.GetHostsHandler)
+
+		req := httptest.NewRequest(http.MethodGet, "/hosts", nil)
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		assert.Equal(http.StatusOK, rr.Result().StatusCode, "Should return status code 200")
+		var res []types.Host
+		err = json.Unmarshal(rr.Body.Bytes(), &res)
+		assert.NoError(err, "Response should be json")
+		assert.Len(res, 2, "Should return 2 hosts")
+	})
+	t.Run("StorageError", func(t *testing.T) {
+		assert := assert.New(t)
+
+		mr := miniredis.RunT(t)
+
+		cfg := storage.StorageConfig{
+			Type: "valkey",
+			Valkey: valkey.ValkeyConfig{
+				Addrs: []string{mr.Addr()},
+			},
+		}
+
+		storageBackend, err := storage.NewStorage(cfg)
+		require.NoError(t, err, "Should create valkey backend without error")
+
+		// Close miniredis to simulate storage error
+		mr.Close()
+
+		handler := &apiHandler{storage: storageBackend}
+		mux := http.NewServeMux()
+		mux.HandleFunc("GET /hosts", handler.GetHostsHandler)
+
+		req := httptest.NewRequest(http.MethodGet, "/hosts", nil)
+		rr := httptest.NewRecorder()
+
+		mux.ServeHTTP(rr, req)
+
+		assert.Equal(http.StatusInternalServerError, rr.Result().StatusCode, "Should return status code 200")
+	})
 }
 
 func TestAddHostHandler(t *testing.T) {
