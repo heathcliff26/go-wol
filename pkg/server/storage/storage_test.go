@@ -60,8 +60,6 @@ func TestNewStorage(t *testing.T) {
 		assert.NotNil(s)
 		assert.IsType(&file.FileBackend{}, s.backend, "Should have file as backend type")
 		assert.Equal(cfg.Readonly, s.readonly, "Readonly should match config")
-		assert.NotEmpty(s.indexHTML, "Index HTML should not be empty")
-		assert.NotEmpty(s.indexChecksum, "Index checksum should not be empty")
 	})
 
 	t.Run("ValkeyBackend", func(t *testing.T) {
@@ -82,8 +80,6 @@ func TestNewStorage(t *testing.T) {
 		assert.NoError(err, "Should not return an error")
 		assert.NotNil(s, "Storage should not be nil")
 		assert.IsType(&valkey.ValkeyBackend{}, s.backend, "Should have valkey as backend type")
-		assert.NotEmpty(s.indexHTML, "Index HTML should not be empty")
-		assert.NotEmpty(s.indexChecksum, "Index checksum should not be empty")
 	})
 
 	t.Run("UnknownBackend", func(t *testing.T) {
@@ -207,19 +203,6 @@ func TestNewStorage(t *testing.T) {
 	})
 }
 
-func TestStorageGetIndexHTML(t *testing.T) {
-	assert := assert.New(t)
-
-	s := &Storage{
-		indexHTML:     "<html>Test</html>",
-		indexChecksum: "1234567890abcdef",
-	}
-
-	html, checksum := s.GetIndexHTML()
-	assert.Equal(s.indexHTML, html, "HTML should match")
-	assert.Equal(s.indexChecksum, checksum, "Checksum should match")
-}
-
 func TestStorageReadonly(t *testing.T) {
 	assert := assert.New(t)
 
@@ -254,12 +237,9 @@ func TestStorageAddHost(t *testing.T) {
 
 		s.readonly = false
 		mockBackend.On("AddHost", "00:11:22:33:44:55", "test").Return(nil)
-		mockBackend.On("GetHosts").Return([]types.Host{{MAC: "00:11:22:33:44:55", Name: "test"}}, nil)
 
 		err := s.AddHost("00:11:22:33:44:55", "test")
 		assert.NoError(err, "Should add host without error")
-		assert.NotEmpty(s.indexHTML, "Should have updated index HTML")
-		assert.NotEmpty(s.indexChecksum, "Should have updated index checksum")
 		mockBackend.AssertExpectations(t)
 	})
 }
@@ -285,12 +265,9 @@ func TestStorageRemoveHost(t *testing.T) {
 
 		s.readonly = false
 		mockBackend.On("RemoveHost", "00:11:22:33:44:55").Return(nil)
-		mockBackend.On("GetHosts").Return([]types.Host{}, nil)
 
 		err := s.RemoveHost("00:11:22:33:44:55")
 		assert.NoError(err, "Should remove host without error")
-		assert.NotEmpty(s.indexHTML, "Should have updated index HTML")
-		assert.NotEmpty(s.indexChecksum, "Should have updated index checksum")
 		mockBackend.AssertExpectations(t)
 	})
 }

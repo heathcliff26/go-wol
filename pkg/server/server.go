@@ -36,7 +36,13 @@ func NewServer(cfgServer config.ServerConfig, cfgStorage storage.StorageConfig) 
 }
 
 func (s *Server) indexHandler(res http.ResponseWriter, req *http.Request) {
-	indexHTML, indexChecksum := s.storage.GetIndexHTML()
+	indexHTML, indexChecksum, err := s.storage.GetIndexHTML()
+	if err != nil {
+		slog.Error("Failed to get index.html", "err", err)
+		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	res.Header().Set("ETag", indexChecksum)
 	res.Header().Set("Cache-Control", "public, max-age=300")
 

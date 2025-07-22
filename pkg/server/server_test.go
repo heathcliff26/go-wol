@@ -32,10 +32,11 @@ func TestNewServer(t *testing.T) {
 	require.NoError(err, "Should create new server")
 	require.NotNil(s, "Server should not be empty")
 
-	indexHTML, indexChecksum := s.storage.GetIndexHTML()
-
 	assert.Equal(":8080", s.addr, "Server should have address set")
 	assert.Equal(cfgServer.SSL, s.ssl, "Server should have SSL Config")
+
+	indexHTML, indexChecksum, err := s.storage.GetIndexHTML()
+	require.NoError(err, "Should create index.html")
 
 	assert.Contains(indexHTML, "testName", "Should add hostname to index.html")
 	assert.Contains(indexHTML, "TESTMAC", "Should add MAC to index.html")
@@ -83,7 +84,8 @@ func TestServer(t *testing.T) {
 	t.Run("IndexHandler", func(t *testing.T) {
 		assert := assert.New(t)
 
-		indexHTML, indexChecksum := s.storage.GetIndexHTML()
+		indexHTML, indexChecksum, err := s.storage.GetIndexHTML()
+		require.NoError(t, err, "Should get index.html")
 
 		for _, path := range []string{"/", "/index.html"} {
 			res, err := http.Get(address + path)

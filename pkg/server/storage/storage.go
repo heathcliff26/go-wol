@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"log/slog"
 	"os"
-	"sync"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/file"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
@@ -22,10 +21,6 @@ import (
 type Storage struct {
 	backend  types.StorageBackend
 	readonly bool
-
-	indexLock     sync.RWMutex
-	indexHTML     string
-	indexChecksum string
 }
 
 func NewStorage(cfg StorageConfig) (*Storage, error) {
@@ -79,11 +74,6 @@ func NewStorage(cfg StorageConfig) (*Storage, error) {
 		}
 	}
 
-	err = s.updateIndexHTML()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create index.html: %w", err)
-	}
-
 	return s, nil
 }
 
@@ -94,14 +84,12 @@ type indexValues struct {
 	Name     string
 }
 
-// Generate the index.html file from the template and the current hosts
-func (s *Storage) updateIndexHTML() error {
-	s.indexLock.Lock()
-	defer s.indexLock.Unlock()
-
+// Generate the index.html file from the template and the current hosts.
+// Returns the generated HTML and its checksum.
+func (s *Storage) GetIndexHTML() (string, string, error) {
 	hosts, err := s.backend.GetHosts()
 	if err != nil {
-		return fmt.Errorf("failed to get hosts: %w", err)
+		return "", "", fmt.Errorf("failed to get hosts: %w", err)
 	}
 
 	values := indexValues{
@@ -113,30 +101,19 @@ func (s *Storage) updateIndexHTML() error {
 
 	tmpl, err := template.New("index.html").Parse(string(static.IndexTemplate))
 	if err != nil {
-		return fmt.Errorf("unexpected error when creating a template from static html: %w", err)
+		return "", "", fmt.Errorf("unexpected error when creating a template from static html: %w", err)
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, values)
 	if err != nil {
-		return fmt.Errorf("failed to apply values to html template: %w", err)
+		return "", "", fmt.Errorf("failed to apply values to html template: %w", err)
 	}
 	indexHTML := buf.String()
 
 	checksum := sha256.Sum256([]byte(indexHTML))
 
-	s.indexHTML = indexHTML
-	s.indexChecksum = hex.EncodeToString(checksum[:])
-
-	return nil
-}
-
-// Return the current index.html and its checksum
-func (s *Storage) GetIndexHTML() (string, string) {
-	s.indexLock.RLock()
-	defer s.indexLock.RUnlock()
-
-	return s.indexHTML, s.indexChecksum
+	return indexHTML, hex.EncodeToString(checksum[:]), nil
 }
 
 // Return if the storage is readonly
@@ -164,11 +141,6 @@ func (s *Storage) AddHost(mac, host string) error {
 		return fmt.Errorf("failed to add host: %w", err)
 	}
 
-	err = s.updateIndexHTML()
-	if err != nil {
-		return fmt.Errorf("failed to update index.html after adding host: %w", err)
-	}
-
 	return nil
 }
 
@@ -181,11 +153,6 @@ func (s *Storage) RemoveHost(mac string) error {
 	err := s.backend.RemoveHost(mac)
 	if err != nil {
 		return fmt.Errorf("failed to remove host: %w", err)
-	}
-
-	err = s.updateIndexHTML()
-	if err != nil {
-		return fmt.Errorf("failed to update index.html after removing host: %w", err)
 	}
 
 	return nil
