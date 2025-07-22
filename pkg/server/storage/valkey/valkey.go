@@ -13,6 +13,8 @@ import (
 
 const hostsListKey = "hosts"
 
+const defaultTimeout = 5 * time.Second
+
 type ValkeyBackend struct {
 	client valkey.Client
 }
@@ -75,12 +77,15 @@ func (v *ValkeyBackend) AddHost(mac string, host string) error {
 	cmdAdd := v.client.B().Set().Key(mac).Value(host).Build()
 	cmdZadd := v.client.B().Zadd().Key(hostsListKey).Nx().ScoreMember().ScoreMember(float64(time.Now().UnixNano()), mac).Build()
 
-	err := v.client.Do(context.Background(), cmdAdd).Error()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	err := v.client.Do(ctx, cmdAdd).Error()
 	if err != nil {
 		return fmt.Errorf("failed to set host: %w", err)
 	}
 
-	err = v.client.Do(context.Background(), cmdZadd).Error()
+	err = v.client.Do(ctx, cmdZadd).Error()
 	if err != nil {
 		return fmt.Errorf("failed to add host to list: %w", err)
 	}
@@ -95,12 +100,15 @@ func (v *ValkeyBackend) RemoveHost(mac string) error {
 	cmdDel := v.client.B().Del().Key(mac).Build()
 	cmdZrem := v.client.B().Zrem().Key(hostsListKey).Member(mac).Build()
 
-	err := v.client.Do(context.Background(), cmdZrem).Error()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	err := v.client.Do(ctx, cmdZrem).Error()
 	if err != nil {
 		return fmt.Errorf("failed to remove host from list: %w", err)
 	}
 
-	err = v.client.Do(context.Background(), cmdDel).Error()
+	err = v.client.Do(ctx, cmdDel).Error()
 	if err != nil {
 		return fmt.Errorf("failed to delete host, but already removed host from list: %w", err)
 	}
@@ -114,7 +122,10 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) {
 
 	cmdGet := v.client.B().Get().Key(mac).Build()
 
-	val, err := v.client.Do(context.Background(), cmdGet).ToString()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	val, err := v.client.Do(ctx, cmdGet).ToString()
 	if err != nil {
 		return "", fmt.Errorf("failed to get host: %w", err)
 	}
@@ -125,7 +136,10 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) {
 func (v *ValkeyBackend) GetHosts() ([]types.Host, error) {
 	cmdZrange := v.client.B().Zrange().Key(hostsListKey).Min("0").Max("-1").Build()
 
-	vals, err := v.client.Do(context.Background(), cmdZrange).ToArray()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	vals, err := v.client.Do(ctx, cmdZrange).ToArray()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get hosts: %w", err)
 	}
