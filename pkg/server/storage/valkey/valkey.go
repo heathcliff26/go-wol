@@ -139,26 +139,32 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	vals, err := v.client.Do(ctx, cmdZrange).ToArray()
+	macs, err := v.client.Do(ctx, cmdZrange).AsStrSlice()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get hosts: %w", err)
+		return nil, fmt.Errorf("failed to get known hosts list: %w", err)
 	}
 
-	hosts := make([]types.Host, len(vals))
-	for i, val := range vals {
-		mac, err := val.ToString()
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert response value to string: %w", err)
+	res, err := valkey.MGet(v.client, ctx, macs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get host names: %w", err)
+	}
+
+	hosts := make([]types.Host, 0, len(macs))
+	for _, mac := range macs {
+		val, ok := res[mac]
+		if !ok {
+			return nil, fmt.Errorf("MAC address '%s' is in list but no hostname is found", mac)
 		}
 
-		name, err := v.GetHost(mac)
+		name, err := val.ToString()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get host name: %w", err)
+			return nil, fmt.Errorf("failed to convert response hostname value to string: %w", err)
 		}
-		hosts[i] = types.Host{
+
+		hosts = append(hosts, types.Host{
 			MAC:  mac,
 			Name: name,
-		}
+		})
 	}
 	return hosts, nil
 }
