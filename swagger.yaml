@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  types.Host:
+    properties:
+      mac:
+        type: string
+      name:
+        type: string
+    type: object
   v1.Response:
     properties:
       reason:
@@ -16,6 +23,23 @@ info:
   title: go-wol API
   version: "1.0"
 paths:
+  /hosts:
+    get:
+      description: Fetch all known hosts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of all known hosts
+          schema:
+            items:
+              $ref: '#/definitions/types.Host'
+            type: array
+        "500":
+          description: Failed to retrieve hosts from storage
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Get hosts
   /hosts/{macAddr}:
     delete:
       description: Remove a host from the list of known hosts

@@ -144,6 +144,15 @@ func (s *Storage) Readonly() bool {
 	return s.readonly
 }
 
+// Get all hosts from the storage
+func (s *Storage) GetHosts() ([]types.Host, error) {
+	hosts, err := s.backend.GetHosts()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get hosts: %w", err)
+	}
+	return hosts, nil
+}
+
 // Add a new host and update the index.html
 func (s *Storage) AddHost(mac, host string) error {
 	if s.readonly {
