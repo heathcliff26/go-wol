@@ -74,19 +74,19 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) {
 
 // Add a new host, overwrite existing host name if it already exists.
 // Ensures that the MAC address is unique and uppercase.
-func (fb *FileBackend) AddHost(mac string, name string) error {
+func (fb *FileBackend) AddHost(host types.Host) error {
 	fb.lock.Lock()
 	defer fb.lock.Unlock()
 
-	uppercaseMAC := strings.ToUpper(mac)
-	for i, host := range fb.storage.Hosts {
-		if host.MAC == uppercaseMAC {
-			fb.storage.Hosts[i].Name = name
+	host.MAC = strings.ToUpper(host.MAC)
+	for i, h := range fb.storage.Hosts {
+		if h.MAC == host.MAC {
+			fb.storage.Hosts[i] = host
 			return fb.save()
 		}
 	}
 
-	fb.storage.Hosts = append(fb.storage.Hosts, types.Host{MAC: uppercaseMAC, Name: name})
+	fb.storage.Hosts = append(fb.storage.Hosts, host)
 	return fb.save()
 }
 
@@ -106,17 +106,17 @@ func (fb *FileBackend) RemoveHost(mac string) error {
 }
 
 // Return the host name for a given MAC address, return empty if not found
-func (fb *FileBackend) GetHost(mac string) (string, error) {
+func (fb *FileBackend) GetHost(mac string) (types.Host, error) {
 	fb.lock.RLock()
 	defer fb.lock.RUnlock()
 
 	uppercaseMAC := strings.ToUpper(mac)
 	for _, host := range fb.storage.Hosts {
 		if host.MAC == uppercaseMAC {
-			return host.Name, nil
+			return host, nil
 		}
 	}
-	return "", nil
+	return types.Host{}, nil
 }
 
 // Return all hosts

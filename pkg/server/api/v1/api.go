@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
+	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/heathcliff26/go-wol/pkg/utils"
 	"github.com/heathcliff26/go-wol/pkg/wol"
 )
@@ -129,7 +130,11 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	err := h.storage.AddHost(macAddr, name)
+	host := types.Host{
+		MAC:  macAddr,
+		Name: name,
+	}
+	err := h.storage.AddHost(host)
 	if err != nil {
 		slog.Error("Failed to add host", "mac", macAddr, "name", name, "error", err)
 		res.WriteHeader(http.StatusInternalServerError)
