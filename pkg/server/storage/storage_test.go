@@ -18,8 +18,8 @@ type MockBackend struct {
 	types.StorageBackend
 }
 
-func (m *MockBackend) AddHost(mac, host string) error {
-	args := m.Called(mac, host)
+func (m *MockBackend) AddHost(host types.Host) error {
+	args := m.Called(host)
 	return args.Error(0)
 }
 
@@ -28,9 +28,9 @@ func (m *MockBackend) RemoveHost(mac string) error {
 	return args.Error(0)
 }
 
-func (m *MockBackend) GetHost(mac string) (string, error) {
+func (m *MockBackend) GetHost(mac string) (types.Host, error) {
 	args := m.Called(mac)
-	return args.String(0), args.Error(1)
+	return args.Get(0).(types.Host), args.Error(1)
 }
 
 func (m *MockBackend) GetHosts() ([]types.Host, error) {
@@ -227,7 +227,7 @@ func TestStorageAddHost(t *testing.T) {
 		assert := assert.New(t)
 
 		s.readonly = true
-		err := s.AddHost("00:11:22:33:44:55", "test")
+		err := s.AddHost(types.Host{MAC: "00:11:22:33:44:55", Name: "test"})
 		assert.Error(err)
 		assert.Contains(err.Error(), "storage is readonly")
 	})
@@ -236,9 +236,9 @@ func TestStorageAddHost(t *testing.T) {
 		assert := assert.New(t)
 
 		s.readonly = false
-		mockBackend.On("AddHost", "00:11:22:33:44:55", "test").Return(nil)
+		mockBackend.On("AddHost", types.Host{MAC: "00:11:22:33:44:55", Name: "test"}).Return(nil)
 
-		err := s.AddHost("00:11:22:33:44:55", "test")
+		err := s.AddHost(types.Host{MAC: "00:11:22:33:44:55", Name: "test"})
 		assert.NoError(err, "Should add host without error")
 		mockBackend.AssertExpectations(t)
 	})

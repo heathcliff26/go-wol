@@ -3,5 +3,6 @@ hosts:
   # They are in the same order as they will be displayed in the UI.
   - name: laptop # Freely chosen name
     mac: AA:BB:CC:DD:EE:FF  # Replace with the actual MAC address
+    address: 127.0.0.1 # (Optional) IP/DNS address of the host. Used to check if the host is online.
   - name: server # Freely chosen name
     mac: 11:22:33:44:55:66  # Replace with the actual MAC address

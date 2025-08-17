@@ -67,7 +67,7 @@ func NewStorage(cfg StorageConfig) (*Storage, error) {
 
 		for _, host := range seededHosts.Hosts {
 			slog.Debug("Adding seeded host", "mac", host.MAC, "name", host.Name)
-			err := s.backend.AddHost(host.MAC, host.Name)
+			err := s.backend.AddHost(host)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add seeded host '%s': %w", host.MAC, err)
 			}
@@ -131,12 +131,12 @@ func (s *Storage) GetHosts() ([]types.Host, error) {
 }
 
 // Add a new host and update the index.html
-func (s *Storage) AddHost(mac, host string) error {
+func (s *Storage) AddHost(host types.Host) error {
 	if s.readonly {
 		return fmt.Errorf("storage is readonly")
 	}
 
-	err := s.backend.AddHost(mac, host)
+	err := s.backend.AddHost(host)
 	if err != nil {
 		return fmt.Errorf("failed to add host: %w", err)
 	}

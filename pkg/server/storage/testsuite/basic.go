@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +15,7 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 	t.Run("AddHost", func(t *testing.T) {
 		backend := factory(t, "add-host")
 
-		err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
+		err := backend.AddHost(testHosts[0])
 		require.NoError(t, err, "AddHost failed")
 	})
 
@@ -24,7 +25,7 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 
 		host, err := backend.GetHost(testHosts[0].MAC)
 		require.NoError(t, err, "GetHost failed")
-		assert.Equal(t, testHosts[0].Name, host, "Failed to retrieve host")
+		assert.Equal(t, testHosts[0], host, "Failed to retrieve host")
 	})
 
 	t.Run("RemoveHost", func(t *testing.T) {
@@ -80,13 +81,13 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 		require := require.New(t)
 		backend := factory(t, "case-insensitive-mac")
 
-		err := backend.AddHost("aa:bb:cc:dd:ee:ff", "LowerCase")
+		err := backend.AddHost(types.Host{MAC: "aa:bb:cc:dd:ee:ff", Name: "LowerCase"})
 
 		require.NoError(err, "Should add host")
 
 		host, err := backend.GetHost("AA:BB:CC:dd:ee:ff")
 		require.NoError(err, "Should get host regardless of case")
-		assert.Equal("LowerCase", host, "Should get correct host name")
+		assert.Equal("LowerCase", host.Name, "Should get correct host name")
 
 		hosts, err := backend.GetHosts()
 		require.NoError(err, "Should get hosts")
@@ -101,10 +102,12 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 		require := require.New(t)
 		backend := factory(t, "add-host-overwrite")
 
-		err := backend.AddHost(testHosts[0].MAC, testHosts[0].Name)
+		err := backend.AddHost(testHosts[0])
 		require.NoError(err, "Should add host")
 
-		err = backend.AddHost(testHosts[0].MAC, "NewName")
+		host := testHosts[0]
+		host.Name = "NewName"
+		err = backend.AddHost(host)
 		require.NoError(err, "Should overwrite host")
 
 		hosts, err := backend.GetHosts()
@@ -119,7 +122,9 @@ func RunStorageBackendTests(t *testing.T, factory StorageBackendFactory) {
 		backend := factory(t, "host-overwrite-keep-order")
 		addHosts(t, backend)
 
-		err := backend.AddHost(testHosts[0].MAC, "NewName")
+		testHost := testHosts[0]
+		testHost.Name = "NewName"
+		err := backend.AddHost(testHost)
 		require.NoError(err, "Should overwrite host")
 
 		hosts, err := backend.GetHosts()

@@ -71,11 +71,12 @@ func NewValkeyBackend(cfg ValkeyConfig) (*ValkeyBackend, error) {
 
 // Add a new host, overwrite existing host name if it already exists.
 // Ensures that the MAC address is unique and uppercase.
-func (v *ValkeyBackend) AddHost(mac string, host string) error {
-	mac = strings.ToUpper(mac)
+func (v *ValkeyBackend) AddHost(host types.Host) error {
+	host.MAC = strings.ToUpper(host.MAC)
+	value := serializeHost(host)
 
-	cmdAdd := v.client.B().Set().Key(mac).Value(host).Build()
-	cmdZadd := v.client.B().Zadd().Key(hostsListKey).Nx().ScoreMember().ScoreMember(float64(time.Now().UnixNano()), mac).Build()
+	cmdAdd := v.client.B().Set().Key(host.MAC).Value(value).Build()
+	cmdZadd := v.client.B().Zadd().Key(hostsListKey).Nx().ScoreMember().ScoreMember(float64(time.Now().UnixNano()), host.MAC).Build()
 
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
@@ -117,7 +118,7 @@ func (v *ValkeyBackend) RemoveHost(mac string) error {
 }
 
 // Return the host name for a given MAC address, return empty if not found
-func (v *ValkeyBackend) GetHost(mac string) (string, error) {
+func (v *ValkeyBackend) GetHost(mac string) (types.Host, error) {
 	mac = strings.ToUpper(mac)
 
 	cmdGet := v.client.B().Get().Key(mac).Build()
@@ -127,9 +128,9 @@ func (v *ValkeyBackend) GetHost(mac string) (string, error) {
 
 	val, err := v.client.Do(ctx, cmdGet).ToString()
 	if err != nil {
-		return "", fmt.Errorf("failed to get host: %w", err)
+		return types.Host{}, fmt.Errorf("failed to get host: %w", err)
 	}
-	return val, nil
+	return deserializeHost(mac, val), nil
 }
 
 // Return all hosts
@@ -153,18 +154,15 @@ func (v *ValkeyBackend) GetHosts() ([]types.Host, error) {
 	for _, mac := range macs {
 		val, ok := res[mac]
 		if !ok {
-			return nil, fmt.Errorf("MAC address '%s' is in list but no hostname is found", mac)
+			return nil, fmt.Errorf("MAC address '%s' is in list but no value is found", mac)
 		}
 
-		name, err := val.ToString()
+		hostStr, err := val.ToString()
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert response hostname value to string: %w", err)
+			return nil, fmt.Errorf("failed to convert response value value to string: %w", err)
 		}
 
-		hosts = append(hosts, types.Host{
-			MAC:  mac,
-			Name: name,
-		})
+		hosts = append(hosts, deserializeHost(mac, hostStr))
 	}
 	return hosts, nil
 }

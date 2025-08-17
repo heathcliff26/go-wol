@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+
+	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 )
 
 // These tests do not run any checks themselves, they rely on race detection for that.
@@ -21,7 +23,10 @@ func RunStorageBackendRaceTests(t *testing.T, factory StorageBackendFactory) {
 
 				mac := fmt.Sprintf("AA:BB:CC:DD:EE:%02X", i)
 				host := fmt.Sprintf("TestHost%d", i)
-				_ = backend.AddHost(mac, host)
+				_ = backend.AddHost(types.Host{
+					MAC:  mac,
+					Name: host,
+				})
 			}(i)
 		}
 		wg.Wait()
