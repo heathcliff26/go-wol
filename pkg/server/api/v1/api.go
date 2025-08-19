@@ -8,6 +8,7 @@ package v1
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
 //	@BasePath	/api/v1
+//	@accept		json
 //	@produce	json
 
 import (
@@ -38,7 +39,7 @@ func NewRouter(storage *storage.Storage) *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /wake/{macAddr}", WakeHandler)
 	router.HandleFunc("GET /hosts", handler.GetHostsHandler)
-	router.HandleFunc("PUT /hosts/{macAddr}/{name}", handler.AddHostHandler)
+	router.HandleFunc("PUT /hosts", handler.AddHostHandler)
 	router.HandleFunc("DELETE /hosts/{macAddr}", handler.RemoveHostHandler)
 	return router
 }
@@ -97,17 +98,23 @@ func (h *apiHandler) GetHostsHandler(res http.ResponseWriter, req *http.Request)
 // @Summary		Add new host
 // @Description	Add a new host to the known hosts
 //
+// @Accept			json
 // @Produce		json
-// @Param			macAddr	path		string		true	"MAC address of the host"
-// @Param			name	path		string		true	"Name of the host"
+// @Param			payload	body		types.Host	true	"New host to add"
 // @Success		200		{object}	Response	"ok"
 // @Failure		400		{object}	Response	"Invalid MAC address or hostname"
 // @Failure		403		{object}	Response	"Storage is readonly"
 // @Failure		500		{object}	Response	"Failed to add host"
-// @Router			/hosts/{macAddr}/{name} [put]
+// @Router			/hosts [put]
 func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) {
-	macAddr := req.PathValue("macAddr")
-	name := req.PathValue("name")
+	var host types.Host
+	err := json.NewDecoder(req.Body).Decode(&host)
+	if err != nil {
+		slog.Debug("Client sent invalid host json", "error", err)
+		res.WriteHeader(http.StatusBadRequest)
+		sendResponse(res, "Request body must be a valid host JSON object")
+		return
+	}
 
 	if h.storage.Readonly() {
 		slog.Debug("Client tried to add host while storage is readonly")
@@ -116,33 +123,29 @@ func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	if !utils.ValidateMACAddress(macAddr) {
-		slog.Debug("Client send invalid MAC address", slog.String("mac", macAddr))
+	if !utils.ValidateMACAddress(host.MAC) {
+		slog.Debug("Client send invalid MAC address", slog.String("mac", host.MAC))
 		res.WriteHeader(http.StatusBadRequest)
 		sendResponse(res, "Invalid MAC address")
 		return
 	}
 
-	if !utils.ValidateHostname(name) {
-		slog.Debug("Client send invalid hostname", slog.String("name", name))
+	if !utils.ValidateHostname(host.Name) {
+		slog.Debug("Client send invalid hostname", slog.String("name", host.Name))
 		res.WriteHeader(http.StatusBadRequest)
 		sendResponse(res, "Invalid hostname")
 		return
 	}
 
-	host := types.Host{
-		MAC:  macAddr,
-		Name: name,
-	}
-	err := h.storage.AddHost(host)
+	err = h.storage.AddHost(host)
 	if err != nil {
-		slog.Error("Failed to add host", "mac", macAddr, "name", name, "error", err)
+		slog.Error("Failed to add host", "host", host, "error", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		sendResponse(res, "Failed to add host")
 		return
 	}
 
-	slog.Info("Added host", slog.String("mac", macAddr), slog.String("name", name))
+	slog.Info("Added host", "host", host)
 	sendResponse(res, "")
 }
 
