@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -127,24 +128,29 @@ func TestGetHostsHandler(t *testing.T) {
 
 func TestAddHostHandler(t *testing.T) {
 	tMatrix := []struct {
-		Name, MAC, Host string
-		Readonly        bool
-		Status          int
-		Response        Response
+		Name     string
+		Host     types.Host
+		Readonly bool
+		Status   int
+		Response Response
 	}{
 		{
-			Name:   "Success",
-			MAC:    "00:11:22:33:44:55",
-			Host:   "TestHost",
+			Name: "Success",
+			Host: types.Host{
+				MAC:  "00:11:22:33:44:55",
+				Name: "TestHost",
+			},
 			Status: http.StatusOK,
 			Response: Response{
 				Status: "ok",
 			},
 		},
 		{
-			Name:   "InvalidMAC",
-			MAC:    "Invalid-MAC",
-			Host:   "TestHost",
+			Name: "InvalidMAC",
+			Host: types.Host{
+				MAC:  "Invalid-MAC",
+				Name: "TestHost",
+			},
 			Status: http.StatusBadRequest,
 			Response: Response{
 				Status: "error",
@@ -152,9 +158,11 @@ func TestAddHostHandler(t *testing.T) {
 			},
 		},
 		{
-			Name:   "InvalidHost",
-			MAC:    "00:11:22:33:44:55",
-			Host:   "Invalid-Host@not_a_domain",
+			Name: "InvalidHost",
+			Host: types.Host{
+				MAC:  "00:11:22:33:44:55",
+				Name: "Invalid-Host@not_a_domain",
+			},
 			Status: http.StatusBadRequest,
 			Response: Response{
 				Status: "error",
@@ -162,9 +170,11 @@ func TestAddHostHandler(t *testing.T) {
 			},
 		},
 		{
-			Name:     "ReadonlyStorage",
-			MAC:      "00:11:22:33:44:55",
-			Host:     "TestHost",
+			Name: "ReadonlyStorage",
+			Host: types.Host{
+				MAC:  "00:11:22:33:44:55",
+				Name: "TestHost",
+			},
 			Readonly: true,
 			Status:   http.StatusForbidden,
 			Response: Response{
@@ -179,6 +189,7 @@ func TestAddHostHandler(t *testing.T) {
 	for _, tCase := range tMatrix {
 		t.Run(tCase.Name, func(t *testing.T) {
 			assert := assert.New(t)
+			require := require.New(t)
 
 			cfg := storage.StorageConfig{
 				Type: "file",
@@ -188,16 +199,17 @@ func TestAddHostHandler(t *testing.T) {
 				Readonly: tCase.Readonly,
 			}
 			storageBackend, err := storage.NewStorage(cfg)
-			require.NoError(t, err, "Should create file backend without error")
+			require.NoError(err, "Should create file backend without error")
 
-			handler := &apiHandler{storage: storageBackend}
-			mux := http.NewServeMux()
-			mux.HandleFunc("PUT /hosts/{macAddr}/{name}", handler.AddHostHandler)
+			router := NewRouter(storageBackend)
 
-			req := httptest.NewRequest(http.MethodPut, "/hosts/"+tCase.MAC+"/"+tCase.Host, nil)
+			body, err := json.Marshal(tCase.Host)
+			require.NoError(err, "Should encode host to JSON")
+
+			req := httptest.NewRequest(http.MethodPut, "/hosts", bytes.NewReader(body))
 			rr := httptest.NewRecorder()
 
-			mux.ServeHTTP(rr, req)
+			router.ServeHTTP(rr, req)
 
 			assert.Equal(tCase.Status, rr.Result().StatusCode, "Should return correct status code")
 
@@ -208,6 +220,38 @@ func TestAddHostHandler(t *testing.T) {
 			assert.Equal(tCase.Response, res, "Response should match")
 		})
 	}
+
+	t.Run("InvalidRequestBody", func(t *testing.T) {
+		assert := assert.New(t)
+		require := require.New(t)
+
+		cfg := storage.StorageConfig{
+			Type: "file",
+			File: file.FileBackendConfig{
+				Path: tmpDir + "/InvalidRequestBody-hosts.yaml",
+			},
+		}
+		storageBackend, err := storage.NewStorage(cfg)
+		require.NoError(err, "Should create file backend without error")
+
+		router := NewRouter(storageBackend)
+
+		req := httptest.NewRequest(http.MethodPut, "/hosts", bytes.NewReader([]byte("This is a text, not a JSON object")))
+		rr := httptest.NewRecorder()
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(http.StatusBadRequest, rr.Result().StatusCode, "Should return status code 400")
+
+		var res Response
+		err = json.Unmarshal(rr.Body.Bytes(), &res)
+		assert.NoError(err, "Response should be json")
+
+		assert.Equal(Response{
+			Status: "error",
+			Reason: "Request body must be a valid host JSON object",
+		}, res, "Response should match")
+	})
 }
 
 func TestRemoveHostHandler(t *testing.T) {
@@ -302,7 +346,13 @@ func TestStorageErrors(t *testing.T) {
 	t.Run("AddHost", func(t *testing.T) {
 		assert := assert.New(t)
 
-		req := httptest.NewRequest(http.MethodPut, "/hosts/FF:FF:FF:FF:FF:FF/testhost", nil)
+		body, err := json.Marshal(types.Host{
+			MAC:  "FF:FF:FF:FF:FF:FF",
+			Name: "testhost",
+		})
+		require.NoError(t, err, "Should encode host to JSON")
+
+		req := httptest.NewRequest(http.MethodPut, "/hosts", bytes.NewReader(body))
 		rr := httptest.NewRecorder()
 
 		router.ServeHTTP(rr, req)

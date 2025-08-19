@@ -1,11 +1,21 @@
 basePath: /api/v1
+consumes:
+- application/json
 definitions:
   types.Host:
     properties:
+      address:
+        example: host.example.org
+        type: string
       mac:
+        example: AA:BB:CC:DD:EE:FF
         type: string
       name:
+        example: my-host
         type: string
+    required:
+    - mac
+    - name
     type: object
   v1.Response:
     properties:
@@ -40,6 +50,37 @@ paths:
           schema:
             $ref: '#/definitions/v1.Response'
       summary: Get hosts
+    put:
+      consumes:
+      - application/json
+      description: Add a new host to the known hosts
+      parameters:
+      - description: New host to add
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/types.Host'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "400":
+          description: Invalid MAC address or hostname
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "403":
+          description: Storage is readonly
+          schema:
+            $ref: '#/definitions/v1.Response'
+        "500":
+          description: Failed to add host
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Add new host
   /hosts/{macAddr}:
     delete:
       description: Remove a host from the list of known hosts
@@ -69,40 +110,6 @@ paths:
           schema:
             $ref: '#/definitions/v1.Response'
       summary: Remove host
-  /hosts/{macAddr}/{name}:
-    put:
-      description: Add a new host to the known hosts
-      parameters:
-      - description: MAC address of the host
-        in: path
-        name: macAddr
-        required: true
-        type: string
-      - description: Name of the host
-        in: path
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            $ref: '#/definitions/v1.Response'
-        "400":
-          description: Invalid MAC address or hostname
-          schema:
-            $ref: '#/definitions/v1.Response'
-        "403":
-          description: Storage is readonly
-          schema:
-            $ref: '#/definitions/v1.Response'
-        "500":
-          description: Failed to add host
-          schema:
-            $ref: '#/definitions/v1.Response'
-      summary: Add new host
   /wake/{macAddr}:
     get:
       description: Send a magic packet to the specified MAC address

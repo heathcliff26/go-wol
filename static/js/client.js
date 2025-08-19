@@ -30,8 +30,15 @@ async function addHost() {
 
     modal.hide();
     try {
-        const response = await fetch('/api/v1/hosts/'+macAddr+"/"+name, {
+        const response = await fetch('/api/v1/hosts', {
             method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                MAC: macAddr,
+                Name: name
+            })
         });
 
         const responseBody = await response.json();
