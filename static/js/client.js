@@ -27,6 +27,15 @@ async function wakeCustom() {
 async function addHost() {
     const name = document.getElementById('hostName').value;
     const macAddr = document.getElementById('macAddress').value;
+    const address = document.getElementById('address').value;
+
+    const host = {
+        MAC: macAddr,
+        Name: name
+    }
+    if (address != "") {
+        host.Address = address;
+    }
 
     modal.hide();
     try {
@@ -35,10 +44,7 @@ async function addHost() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                MAC: macAddr,
-                Name: name
-            })
+            body: JSON.stringify(host)
         });
 
         const responseBody = await response.json();

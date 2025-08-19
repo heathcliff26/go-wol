@@ -50,13 +50,14 @@ func NewFileBackend(cfg FileBackendConfig) (*FileBackend, error) {
 	changed := false
 	for _, host := range fb.storage.Hosts {
 		uppercaseMAC := strings.ToUpper(host.MAC)
-		if !macSet[uppercaseMAC] {
-			macSet[uppercaseMAC] = true
-			uniqueHosts = append(uniqueHosts, types.Host{MAC: uppercaseMAC, Name: host.Name})
-		} else {
+		if host.MAC != uppercaseMAC {
 			changed = true
 		}
-		if host.MAC != uppercaseMAC {
+		if !macSet[uppercaseMAC] {
+			macSet[uppercaseMAC] = true
+			host.MAC = uppercaseMAC
+			uniqueHosts = append(uniqueHosts, host)
+		} else {
 			changed = true
 		}
 	}

@@ -119,6 +119,25 @@ func TestNewFileBackend(t *testing.T) {
 		assert.Nil(fb, "File backend should be nil")
 		assert.Contains(err.Error(), "failed to save storage file after ensuring unique, uppercase MAC addresses:", "Error should contain message")
 	})
+
+	t.Run("OptionalAttributes", func(t *testing.T) {
+		assert := assert.New(t)
+		path := "testdata/optional.yaml"
+
+		fb, err := NewFileBackend(FileBackendConfig{Path: path})
+		require.NoError(t, err, "Failed to create file backend")
+		assert.NotNil(fb, "File backend should not be nil")
+
+		hosts := append([]types.Host{}, basicTestHosts...)
+		hosts = append(hosts, types.Host{
+			Name:    "TestHost3",
+			MAC:     "77:88:99:AA:BB:CC",
+			Address: "host3.example.org",
+		})
+
+		assert.Equal(path, fb.path, "File backend path should match")
+		assert.Equal(hosts, fb.storage.Hosts, "File backend hosts should match")
+	})
 }
 
 func TestReadonly(t *testing.T) {

@@ -1227,6 +1227,10 @@ button:not(:disabled),
   font-size: 1rem !important;
 }
 
+.fw-light {
+  font-weight: 300 !important;
+}
+
 .fw-bold {
   font-weight: 700 !important;
 }
