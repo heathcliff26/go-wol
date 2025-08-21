@@ -12,6 +12,9 @@ github.com/alicebob/miniredis/v2/size
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/google/uuid v1.6.0
+## explicit
+github.com/google/uuid
 # github.com/heathcliff26/simple-fileserver v1.2.7
 ## explicit; go 1.24.0
 github.com/heathcliff26/simple-fileserver/pkg/filesystem
@@ -22,6 +25,9 @@ github.com/inconshreveable/mousetrap
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
+# github.com/prometheus-community/pro-bing v0.7.0
+## explicit; go 1.23.0
+github.com/prometheus-community/pro-bing
 # github.com/spf13/cobra v1.9.1
 ## explicit; go 1.15
 github.com/spf13/cobra
@@ -51,9 +57,22 @@ github.com/yuin/gopher-lua/pm
 # go.yaml.in/yaml/v2 v2.4.2
 ## explicit; go 1.15
 go.yaml.in/yaml/v2
+# golang.org/x/net v0.38.0
+## explicit; go 1.23.0
+golang.org/x/net/bpf
+golang.org/x/net/icmp
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
+golang.org/x/net/ipv4
+golang.org/x/net/ipv6
+# golang.org/x/sync v0.13.0
+## explicit; go 1.23.0
+golang.org/x/sync/errgroup
 # golang.org/x/sys v0.31.0
 ## explicit; go 1.23.0
 golang.org/x/sys/cpu
+golang.org/x/sys/unix
+golang.org/x/sys/windows
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3

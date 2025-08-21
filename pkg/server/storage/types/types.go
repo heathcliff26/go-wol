@@ -7,6 +7,14 @@ type Host struct {
 	Address string `json:"address,omitempty" validate:"optional" example:"host.example.org"`
 }
 
+// Status of a host.
+type HostStatus struct {
+	MAC     string `json:"mac"`
+	Address string `json:"address"`
+	Online  bool   `json:"online"`
+	Error   string `json:"error,omitempty"`
+}
+
 // StorageBackend is a concurrency safe interface for different methods of storing the configured hosts.
 type StorageBackend interface {
 	// Add a new host, overwrite existing host name if it already exists.
