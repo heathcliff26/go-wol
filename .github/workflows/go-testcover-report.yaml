@@ -13,3 +13,6 @@ jobs:
     permissions: {}
     with:
       coveralls: true
+      script: |
+        sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
+        make coverprofile
