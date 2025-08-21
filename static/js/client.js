@@ -84,3 +84,20 @@ async function deleteHost(macAddr, name) {
         appendAlert("Failed to delete host " + name, "danger");
     }
 }
+
+async function hostStatus() {
+    try {
+        const response = await fetch(`/api/v1/hosts/status`);
+
+        const responseBody = await response.json();
+
+        if (response.ok) {
+            updateHostStatus(responseBody);
+        } else {
+            appendAlert(`Failed to fetch host status: ${responseBody.reason}`, "warning");
+        }
+    } catch (error) {
+        console.error(error.message);
+        appendAlert("Failed to fetch host status", "danger");
+    }
+}

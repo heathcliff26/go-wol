@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/heathcliff26/go-wol/pkg/ping"
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/heathcliff26/go-wol/pkg/utils"
@@ -41,6 +42,7 @@ func NewRouter(storage *storage.Storage) *http.ServeMux {
 	router.HandleFunc("GET /hosts", handler.GetHostsHandler)
 	router.HandleFunc("PUT /hosts", handler.AddHostHandler)
 	router.HandleFunc("DELETE /hosts/{macAddr}", handler.RemoveHostHandler)
+	router.HandleFunc("GET /hosts/status", handler.HostStatusHandler)
 	return router
 }
 
@@ -186,6 +188,32 @@ func (h *apiHandler) RemoveHostHandler(res http.ResponseWriter, req *http.Reques
 
 	slog.Info("Removed host", slog.String("mac", macAddr))
 	sendResponse(res, "")
+}
+
+// @Summary		Get host status
+// @Description	Get the status of all hosts with an address to check if they are online
+//
+// @Produce		json
+// @Success		200	{object}	[]types.HostStatus	"List of host statuses"
+// @Failure		500	{object}	Response			"Failed to fetch or ping hosts"
+// @Router			/hosts/status [get]
+func (h *apiHandler) HostStatusHandler(res http.ResponseWriter, req *http.Request) {
+	hosts, err := h.storage.GetHosts()
+	if err != nil {
+		slog.Error("Failed to fetch hosts", "error", err)
+		res.WriteHeader(http.StatusInternalServerError)
+		sendResponse(res, "Failed to fetch hosts")
+		return
+	}
+
+	hostsToCheck := make([]types.Host, 0, len(hosts))
+	for _, host := range hosts {
+		if host.Address != "" {
+			hostsToCheck = append(hostsToCheck, host)
+		}
+	}
+
+	sendJSONResponse(res, ping.PingHosts(hostsToCheck))
 }
 
 func sendResponse(rw http.ResponseWriter, reason string) {

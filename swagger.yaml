@@ -17,6 +17,17 @@ definitions:
     - mac
     - name
     type: object
+  types.HostStatus:
+    properties:
+      address:
+        type: string
+      error:
+        type: string
+      mac:
+        type: string
+      online:
+        type: boolean
+    type: object
   v1.Response:
     properties:
       reason:
@@ -110,6 +121,24 @@ paths:
           schema:
             $ref: '#/definitions/v1.Response'
       summary: Remove host
+  /hosts/status:
+    get:
+      description: Get the status of all hosts with an address to check if they are
+        online
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of host statuses
+          schema:
+            items:
+              $ref: '#/definitions/types.HostStatus'
+            type: array
+        "500":
+          description: Failed to fetch or ping hosts
+          schema:
+            $ref: '#/definitions/v1.Response'
+      summary: Get host status
   /wake/{macAddr}:
     get:
       description: Send a magic packet to the specified MAC address

@@ -68,6 +68,7 @@ jobs:
       contents: read
     with:
       coveralls: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+      cmd: 'sudo sysctl -w net.ipv4.ping_group_range="0 2147483647" && make test'
 
   validate:
     uses: heathcliff26/ci/.github/workflows/golang-build.yaml@main

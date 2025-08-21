@@ -108,3 +108,21 @@ function validateHostname(input) {
 
     input.setCustomValidity("");
 }
+
+function updateHostStatus(statuses) {
+    for (let status of statuses) {
+        const addressElement = document.getElementById(status.mac + ".Address");
+        if (!addressElement) {
+            console.warn(`No address element found for host: ${status.mac}`);
+            continue;
+        }
+        addressElement.innerHTML = status.online ? "🟢 " + status.address : "🔴 " + status.address;
+        if (status.error) {
+            appendAlert(`Failed to fetch status for host ${status.mac}: ${status.error}`, "warning");
+        }
+    }
+}
+
+hostStatus();
+// Update host status every 30 seconds
+setInterval(hostStatus, 30000);

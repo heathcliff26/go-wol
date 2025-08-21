@@ -16,6 +16,7 @@ It can be used directly via the cli, or remotely via a web interface.
   - [Usage](#usage)
     - [CLI Args](#cli-args)
     - [Using the image](#using-the-image)
+      - [Permissions for ping functionality](#permissions-for-ping-functionality)
     - [Image location](#image-location)
     - [Tags](#tags)
   - [Configuration](#configuration)
@@ -55,6 +56,10 @@ $ podman run -d --net host -v /path/to/config.yaml:/config/config.yaml ghcr.io/h
 If you want to use it with persistent data, run it with `-v go-wol-data:/data`. With the default configuration it will write data to `/data/hosts.yaml`.
 
 The image can be run without configuration, it will simply use the default values.
+
+#### Permissions for ping functionality
+
+If you encounter `socket: permission denied` errors when checking if a host is online, you might need to run `sudo sysctl -w net.ipv4.ping_group_range="0 2147483647`.
 
 ### Image location
 
