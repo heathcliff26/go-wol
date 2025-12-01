@@ -15,7 +15,7 @@ github.com/davecgh/go-spew/spew
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
-# github.com/heathcliff26/simple-fileserver v1.2.13
+# github.com/heathcliff26/simple-fileserver v1.2.15
 ## explicit; go 1.24.0
 github.com/heathcliff26/simple-fileserver/pkg/filesystem
 github.com/heathcliff26/simple-fileserver/pkg/middleware
@@ -43,7 +43,7 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
-# github.com/valkey-io/valkey-go v1.0.67
+# github.com/valkey-io/valkey-go v1.0.68
 ## explicit; go 1.23.0
 github.com/valkey-io/valkey-go
 github.com/valkey-io/valkey-go/internal/cmds
