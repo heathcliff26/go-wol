@@ -27,7 +27,7 @@ func PingHosts(hosts []types.Host) []types.HostStatus {
 			}
 
 			pinger.Count = 1
-			pinger.Timeout = 2 * time.Second
+			pinger.Timeout = 200 * time.Millisecond
 
 			err = pinger.Run()
 			if err != nil {
