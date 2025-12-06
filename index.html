@@ -178,16 +178,16 @@ import (
 
 // Ping all the hosts and return their status.
 // Will return the first error encountered, if any.
-func PingHosts(hosts []types.Host) []types.HostStatus <span class="cov9" title="8">{
+func PingHosts(hosts []types.Host) []types.HostStatus <span class="cov9" title="9">{
         res := make(chan types.HostStatus, 1)
 
-        for _, host := range hosts </span><span class="cov10" title="9">{
+        for _, host := range hosts </span><span class="cov10" title="10">{
                 status := types.HostStatus{
                         MAC:     host.MAC,
                         Address: host.Address,
                 }
 
-                go func() </span><span class="cov10" title="9">{
+                go func() </span><span class="cov10" title="10">{
                         pinger, err := probing.NewPinger(host.Address)
                         if err != nil </span><span class="cov1" title="1">{
                                 status.Error = err.Error()
@@ -195,8 +195,8 @@ func PingHosts(hosts []types.Host) []types.HostStatus <span class="cov9" title="
                                 return
                         }</span>
 
-                        <span class="cov9" title="8">pinger.Count = 1
-                        pinger.Timeout = 2 * time.Second
+                        <span class="cov9" title="9">pinger.Count = 1
+                        pinger.Timeout = 200 * time.Millisecond
 
                         err = pinger.Run()
                         if err != nil </span><span class="cov0" title="0">{
@@ -204,19 +204,19 @@ func PingHosts(hosts []types.Host) []types.HostStatus <span class="cov9" title="
                                 res &lt;- status
                                 return
                         }</span>
-                        <span class="cov9" title="8">stats := pinger.Statistics()
+                        <span class="cov9" title="9">stats := pinger.Statistics()
 
                         status.Online = stats != nil &amp;&amp; stats.PacketsRecv &gt; 0
                         res &lt;- status</span>
                 }()
         }
 
-        <span class="cov9" title="8">results := make([]types.HostStatus, len(hosts))
-        for i := range results </span><span class="cov10" title="9">{
+        <span class="cov9" title="9">results := make([]types.HostStatus, len(hosts))
+        for i := range results </span><span class="cov10" title="10">{
                 status := &lt;-res
                 results[i] = status
         }</span>
-        <span class="cov9" title="8">return results</span>
+        <span class="cov9" title="9">return results</span>
 }
 </pre>
 		
