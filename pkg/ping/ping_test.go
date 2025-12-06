@@ -54,4 +54,18 @@ func TestPing(t *testing.T) {
 		assert.True(result[0].Online, "Host should be online")
 		assert.Empty(result[0].Error, "Should not return an error")
 	})
+	t.Run("UnreachableHost", func(t *testing.T) {
+		assert := assert.New(t)
+
+		hosts := []types.Host{
+			{
+				MAC:     "00:11:22:33:44:55",
+				Address: "192.0.2.1", // TEST-NET-1 IP address, should be unreachable
+			},
+		}
+		result := PingHosts(hosts)
+
+		assert.False(result[0].Online, "Host should be offline")
+		assert.Empty(result[0].Error, "Should not return an error")
+	})
 }
