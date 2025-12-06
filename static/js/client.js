@@ -3,19 +3,48 @@
 async function wake(macAddr, name = "") {
     const displayName = name != "" ? name + " (" + macAddr + ")" : macAddr
 
+    const button = document.getElementById(macAddr + ".Button");
+    if (button) {
+        button.disabled = true;
+        button.innerText = "Waking...";
+    }
+
     try {
         const response = await fetch("/api/v1/wake/" + macAddr);
 
         const responseBody = await response.json();
 
         if (response.ok) {
-            appendAlert("Send magic packet to " + displayName);
+            if (button) {
+                button.innerText = "✅ Woken up";
+                // Wait 1 second before reverting the button text
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+                appendAlert("Send magic packet to " + displayName);
+            }
         } else {
-            appendAlert("Failed to send magic packet to " + displayName + " : " + responseBody.reason, "warning");
+            if (button) {
+                button.innerText = "❌ Failed";
+                // Wait 1 second before reverting the button text
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+                appendAlert("Failed to send magic packet to " + displayName + " : " + responseBody.reason, "warning");
+            }
         }
     } catch (error) {
         console.error(error.message);
-        appendAlert("Failed to send magic packet to " + displayName, "danger");
+        if (button) {
+            button.innerText = "❌ Failed";
+            // Wait 1 second before reverting the button text
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+            appendAlert("Failed to send magic packet to " + displayName, "danger");
+        }
+    } finally {
+        if (button) {
+            button.innerText = "Wake";
+            button.disabled = false;
+        }
     }
 }
 

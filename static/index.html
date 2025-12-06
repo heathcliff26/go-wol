@@ -52,7 +52,7 @@
                                 {{end}}
                                 <div class="row">
                                     <div class="col">
-                                        <button type="button" class="btn btn-primary w-100" onclick="wake('{{.MAC}}', '{{.Name}}');" aria-label="Wake {{.Name}}">Wake</button>
+                                        <button type="button" class="btn btn-primary w-100" id="{{.MAC}}.Button" onclick="wake('{{.MAC}}', '{{.Name}}');" aria-label="Wake {{.Name}}">Wake</button>
                                     </div>
                                     {{if not $.Readonly}}
                                     <div class="col-auto">
