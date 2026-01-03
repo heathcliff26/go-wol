@@ -15,7 +15,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/version"
 	"github.com/heathcliff26/go-wol/static"
 
-	"sigs.k8s.io/yaml"
+	"go.yaml.in/yaml/v3"
 )
 
 type Storage struct {

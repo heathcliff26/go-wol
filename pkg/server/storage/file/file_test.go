@@ -8,7 +8,7 @@ import (
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/yaml"
+	"go.yaml.in/yaml/v3"
 )
 
 var basicTestHosts = []types.Host{

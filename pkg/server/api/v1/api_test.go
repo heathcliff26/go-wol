@@ -94,6 +94,10 @@ func TestGetHostsHandler(t *testing.T) {
 		err = json.Unmarshal(rr.Body.Bytes(), &res)
 		assert.NoError(err, "Response should be json")
 		assert.Len(res, 2, "Should return 2 hosts")
+		for _, host := range res {
+			assert.NotEmpty(host.Name, "Host name should not be empty")
+			assert.NotEmpty(host.MAC, "Host MAC should not be empty")
+		}
 	})
 	t.Run("StorageError", func(t *testing.T) {
 		t.Parallel()

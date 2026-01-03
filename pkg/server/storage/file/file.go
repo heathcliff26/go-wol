@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage/types"
-	"sigs.k8s.io/yaml"
+	"go.yaml.in/yaml/v3"
 )
 
 type FileBackend struct {
