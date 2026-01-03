@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/heathcliff26/go-wol/pkg/server/storage"
-	"sigs.k8s.io/yaml"
+	"go.yaml.in/yaml/v3"
 )
 
 const (
@@ -31,20 +31,20 @@ func init() {
 }
 
 type Config struct {
-	LogLevel string                `json:"logLevel,omitempty"`
-	Server   ServerConfig          `json:"server,omitempty"`
-	Storage  storage.StorageConfig `json:"storage,omitempty"`
+	LogLevel string                `yaml:"logLevel,omitempty"`
+	Server   ServerConfig          `yaml:"server,omitempty"`
+	Storage  storage.StorageConfig `yaml:"storage,omitempty"`
 }
 
 type ServerConfig struct {
-	Port int       `json:"port,omitempty"`
-	SSL  SSLConfig `json:"ssl,omitempty"`
+	Port int       `yaml:"port,omitempty"`
+	SSL  SSLConfig `yaml:"ssl,omitempty"`
 }
 
 type SSLConfig struct {
-	Enabled bool   `json:"enabled,omitempty"`
-	Cert    string `json:"cert,omitempty"`
-	Key     string `json:"key,omitempty"`
+	Enabled bool   `yaml:"enabled,omitempty"`
+	Cert    string `yaml:"cert,omitempty"`
+	Key     string `yaml:"key,omitempty"`
 }
 
 // Returns a Config with default values set

@@ -2,9 +2,9 @@ package types
 
 // Host on the network.
 type Host struct {
-	MAC     string `json:"mac" validate:"required" example:"AA:BB:CC:DD:EE:FF"`
-	Name    string `json:"name" validate:"required" example:"my-host"`
-	Address string `json:"address,omitempty" validate:"optional" example:"host.example.org"`
+	MAC     string `json:"mac" yaml:"mac" validate:"required" example:"AA:BB:CC:DD:EE:FF"`
+	Name    string `json:"name" yaml:"name" validate:"required" example:"my-host"`
+	Address string `json:"address,omitempty" yaml:"address,omitempty" validate:"optional" example:"host.example.org"`
 }
 
 // Status of a host.
@@ -32,5 +32,5 @@ type StorageBackend interface {
 
 // Struct for reading hosts from a yaml file.
 type HostsFile struct {
-	Hosts []Host `json:"hosts"`
+	Hosts []Host `json:"hosts" yaml:"hosts"`
 }

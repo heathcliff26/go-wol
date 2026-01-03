@@ -5,7 +5,7 @@ const (
 )
 
 type FileBackendConfig struct {
-	Path string `json:"path,omitempty"`
+	Path string `yaml:"path,omitempty"`
 }
 
 func NewDefaultFileBackendConfig() FileBackendConfig {

@@ -11,11 +11,11 @@ const (
 )
 
 type StorageConfig struct {
-	Type        string                 `json:"type"`
-	Readonly    bool                   `json:"readonly,omitempty"`
-	SeededHosts string                 `json:"seeded-hosts,omitempty"`
-	File        file.FileBackendConfig `json:"file,omitempty"`
-	Valkey      valkey.ValkeyConfig    `json:"valkey,omitempty"`
+	Type        string                 `yaml:"type"`
+	Readonly    bool                   `yaml:"readonly,omitempty"`
+	SeededHosts string                 `yaml:"seeded-hosts,omitempty"`
+	File        file.FileBackendConfig `yaml:"file,omitempty"`
+	Valkey      valkey.ValkeyConfig    `yaml:"valkey,omitempty"`
 }
 
 func NewDefaultStorageConfig() StorageConfig {
