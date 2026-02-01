@@ -3,12 +3,12 @@ module github.com/heathcliff26/go-wol
 go 1.24.9
 
 require (
-	github.com/alicebob/miniredis/v2 v2.35.0
-	github.com/heathcliff26/simple-fileserver v1.2.16
+	github.com/alicebob/miniredis/v2 v2.36.1
+	github.com/heathcliff26/simple-fileserver v1.2.17
 	github.com/prometheus-community/pro-bing v0.7.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/valkey-io/valkey-go v1.0.70
+	github.com/valkey-io/valkey-go v1.0.71
 	go.yaml.in/yaml/v3 v3.0.4
 )
 
