@@ -3,12 +3,12 @@ module github.com/heathcliff26/go-wol
 go 1.24.9
 
 require (
-	github.com/alicebob/miniredis/v2 v2.36.1
-	github.com/heathcliff26/simple-fileserver v1.2.17
-	github.com/prometheus-community/pro-bing v0.7.0
+	github.com/alicebob/miniredis/v2 v2.37.0
+	github.com/heathcliff26/simple-fileserver v1.2.18
+	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/valkey-io/valkey-go v1.0.71
+	github.com/valkey-io/valkey-go v1.0.72
 	go.yaml.in/yaml/v3 v3.0.4
 )
 
@@ -20,8 +20,8 @@ require (
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
