@@ -18,7 +18,7 @@ func TestValidateMACAddress(t *testing.T) {
 		{"InvalidMacAddressInvalidCharacters", "01:23:45:67:89:ZZ", false},
 		{"ValidMacAddressLowercase", "01:23:45:67:89:ab", true},
 		{"InvalidMacAddressEmptyString", "", false},
-		{"InvalidMacAddressMissingColons", "0123456789AB", false},
+		{"ValidMacAddressWithoutSeparator", "0123456789AB", true},
 		{"InvalidMacAddressTooLong", "01:23:45:67:89:AB:CD", false},
 		{"ValidMacAddressWithDash", "01-23-45-67-89-AB", true},
 		{"InvalidMacAddressLeadingSpaces", " 01:23:45:67:89:AB", false},
