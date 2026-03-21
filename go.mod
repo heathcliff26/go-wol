@@ -4,11 +4,11 @@ go 1.24.9
 
 require (
 	github.com/alicebob/miniredis/v2 v2.37.0
-	github.com/heathcliff26/simple-fileserver v1.2.18
+	github.com/heathcliff26/simple-fileserver v1.3.0
 	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/valkey-io/valkey-go v1.0.72
+	github.com/valkey-io/valkey-go v1.0.73
 	go.yaml.in/yaml/v3 v3.0.4
 )
 
