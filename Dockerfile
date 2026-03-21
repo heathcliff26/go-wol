@@ -23,7 +23,7 @@ FROM scratch AS final-stage
 
 COPY --from=build-stage /app/bin/go-wol /go-wol
 
-USER 1001
+USER 65534:65534
 
 WORKDIR /data
 VOLUME /data
