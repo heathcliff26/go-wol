@@ -87,19 +87,11 @@ jobs:
     needs:
       - lint
       - unit-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-          - arch: arm64
     with:
       release: "${{ github.event_name == 'pull_request' && 'devel' || inputs.tag == '' && 'rolling' || inputs.tag }}"
-      goos: "linux"
-      goarch: "${{ matrix.arch }}"
-      artifact: "bin/go-wol-${{ matrix.arch }}"
-      artifact-name: "go-wol-${{ matrix.arch }}"
-      cmd: "hack/build.sh go-wol-${{ matrix.arch }}"
+      artifact: "dist/go-wol*"
+      artifact-name: "go-wol"
+      cmd: "make release"
     secrets: inherit
 
   build-image:

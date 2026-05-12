@@ -1,5 +1,6 @@
 # Ignore binaries
 /bin
+/dist
 
 # Ignore files created for testing
 /test-*.yaml
