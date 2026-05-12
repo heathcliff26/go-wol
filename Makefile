@@ -16,6 +16,10 @@ run: build
 image:
 	podman build -t $(REPOSITORY)/$(CONTAINER_NAME):$(TAG) .
 
+# Build all artifacts used for release, except the container images
+release:
+	hack/release.sh
+
 # Run unit-tests with race detection and coverage
 test:
 	go test -v -race -coverprofile=coverprofile.out -coverpkg "./..." ./...
@@ -57,7 +61,7 @@ gosec:
 
 # Clean up generated files
 clean:
-	rm -rf bin coverprofiles coverprofile.out
+	hack/clean.sh
 
 # Show this help message
 help:
@@ -71,6 +75,7 @@ help:
 	build \
 	run \
 	image \
+	release \
 	test \
 	update-deps \
 	coverprofile \
