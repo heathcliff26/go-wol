@@ -12,7 +12,8 @@ package v1
 //	@produce	json
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"log/slog"
 	"net/http"
 
@@ -110,7 +111,7 @@ func (h *apiHandler) GetHostsHandler(res http.ResponseWriter, req *http.Request)
 // @Router			/hosts [put]
 func (h *apiHandler) AddHostHandler(res http.ResponseWriter, req *http.Request) {
 	var host types.Host
-	err := json.NewDecoder(req.Body).Decode(&host)
+	err := json.UnmarshalRead(req.Body, &host)
 	if err != nil {
 		slog.Debug("Client sent invalid host json", "error", err)
 		res.WriteHeader(http.StatusBadRequest)
@@ -230,7 +231,7 @@ func sendResponse(rw http.ResponseWriter, reason string) {
 
 // Send an arbitrary JSON Object to the client
 func sendJSONResponse(rw http.ResponseWriter, data any) {
-	b, err := json.MarshalIndent(data, "", "  ")
+	b, err := json.Marshal(data, jsontext.WithIndent("  "))
 	if err != nil {
 		slog.Error("Failed to create Response", "err", err)
 		return
