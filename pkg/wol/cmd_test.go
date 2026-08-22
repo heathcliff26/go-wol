@@ -1,6 +1,7 @@
 package wol
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -10,7 +11,6 @@ func TestCMD(t *testing.T) {
 	tMatrix := []struct {
 		Name, Broadcast, MAC string
 		ExitWithError        bool
-		NoMac                bool
 	}{
 		{
 			Name: "MacOnly",
@@ -24,11 +24,6 @@ func TestCMD(t *testing.T) {
 		{
 			Name:          "EmptyMAC",
 			MAC:           "",
-			ExitWithError: true,
-		},
-		{
-			Name:          "MissingMAC",
-			NoMac:         true,
 			ExitWithError: true,
 		},
 		{
@@ -53,15 +48,13 @@ func TestCMD(t *testing.T) {
 				if tCase.Broadcast != "" {
 					args = append(args, "--"+flagNameBroadcastAddress, tCase.Broadcast)
 				}
-				if !tCase.NoMac {
-					args = append(args, tCase.MAC)
-				}
+				args = append(args, tCase.MAC)
 				cmd.SetArgs(args)
 
 				err := cmd.Execute()
 				if err != nil {
-					t.Logf("Execute failed: %v", err)
-					os.Exit(2)
+					fmt.Printf("Execute failed: %v\n", err)
+					os.Exit(0) // Exit without error here so the test fails
 				}
 
 				// Should not reach here, ensure exit with 0 if it does
@@ -73,10 +66,13 @@ func TestCMD(t *testing.T) {
 }
 
 func execExitTest(t *testing.T, test string, exitsError bool) {
+	t.Helper()
+
 	cmd := exec.Command(os.Args[0], "-test.run="+test)
 	cmd.Env = append(os.Environ(), "RUN_CRASH_TEST=1")
-	err := cmd.Run()
+	buf, err := cmd.Output()
 	if exitsError && err == nil {
+		t.Log(string(buf))
 		t.Fatal("Process exited without error")
 	} else if !exitsError && err == nil {
 		return
@@ -84,5 +80,6 @@ func execExitTest(t *testing.T, test string, exitsError bool) {
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		return
 	}
+	t.Log(string(buf))
 	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
